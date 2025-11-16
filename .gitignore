@@ -1,0 +1,4 @@
+backend/vendor/
+backend/storage/
+backend/.env
+frontend/node_modules/
