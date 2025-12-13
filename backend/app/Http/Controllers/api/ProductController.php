@@ -1,108 +1,131 @@
 <?php
-
 namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
-use App\Models\QrCode;
-use App\Models\Product;
-use App\Models\ProductImage;
 use Illuminate\Http\Request;
+use App\Handlers\ProductHandler;
 
 class ProductController extends Controller
 {
-    public function getProductsByQr($code)
+    /**
+     * Crear un nuevo producto.
+     *
+     * @param Request $request
+     * @param ProductHandler $handler
+     * @return \Illuminate\Http\JsonResponse
+     *
+     * Este método recibe los datos enviados por el cliente, delega la creación
+     * en el handler y devuelve el producto creado o un error si los datos
+     * no son válidos o la categoría asociada no existe.
+     */
+    public function create(Request $request, ProductHandler $handler)
     {
-        // Buscar el QR
-        $qr = QrCode::where('code', $code)->first();
+        try {
+            $product = $handler->create($request->all());
 
-        if (!$qr) {
             return response()->json([
-                'message' => 'QR no encontrado'
-            ], 404);
+                'message' => 'Producto creado correctamente',
+                'data' => $product
+            ], 201);
+
+        } catch (\Exception $e) {
+            // El handler lanza una excepción si la categoría no existe
+            return response()->json(['message'=>$e->getMessage()], 422);
+        }
+    }
+
+    /**
+     * Mostrar un producto por ID.
+     *
+     * @param ProductHandler $handler
+     * @param int $id
+     * @return \Illuminate\Http\JsonResponse
+     *
+     * Si el producto no existe, devuelve un error 404.
+     */
+    public function show(ProductHandler $handler, $id)
+    {
+        $product = $handler->get($id);
+
+        if (!$product) {
+            return response()->json(['message'=>'Producto no encontrado'], 404);
         }
 
-        // Obtener productos asociados con sus imágenes
-        $products = $qr->products()->with('images')->get();
+        return response()->json(['data' => $product]);
+    }
 
+    /**
+     * Actualizar un producto existente.
+     *
+     * @param Request $request
+     * @param ProductHandler $handler
+     * @param int $id
+     * @return \Illuminate\Http\JsonResponse
+     *
+     * Retorna error si el producto no existe o si la categoría enviada no es válida.
+     */
+    public function update(Request $request, ProductHandler $handler, $id)
+    {
+        try {
+            $product = $handler->update($id, $request->all());
+
+            if (!$product) {
+                return response()->json(['message'=>'Producto no encontrado'], 404);
+            }
+
+            return response()->json([
+                'message' => 'Producto modificado correctamente',
+                'data' => $product
+            ]);
+
+        } catch (\Exception $e) {
+            // Puede ser categoría inexistente o validación del handler
+            return response()->json(['message'=>$e->getMessage()], 422);
+        }
+    }
+
+    /**
+     * Eliminar un producto por ID.
+     *
+     * @param ProductHandler $handler
+     * @param int $id
+     * @return \Illuminate\Http\JsonResponse
+     *
+     * Retorna 404 si el producto no existe.
+     */
+    public function destroy(ProductHandler $handler, $id)
+    {
+        if (!$handler->delete($id)) {
+            return response()->json(['message'=>'Producto no encontrado'], 404);
+        }
+
+        return response()->json(['message'=>'Producto eliminado correctamente']);
+    }
+
+    /**
+     * Listar todos los productos.
+     *
+     * @param ProductHandler $handler
+     * @return \Illuminate\Http\JsonResponse
+     */
+    public function list(ProductHandler $handler)
+    {
         return response()->json([
-            'qr' => $qr->code,
-            'products' => $products
+            'data' => $handler->list()
         ]);
     }
-    // Listar todos los productos con imágenes
-    public function index()
-    {
-        $products = Product::with('images')->get();
-        return response()->json($products);
-    }
 
-    // Crear producto
-    public function store(Request $request)
+    /**
+     * Listar productos filtrados por categoría.
+     *
+     * @param ProductHandler $handler
+     * @param int $categoryId
+     * @return \Illuminate\Http\JsonResponse
+     */
+    public function listByCategory(ProductHandler $handler, $categoryId)
     {
-        $request->validate([
-            'reference' => 'required|unique:products,reference',
-            'name' => 'required',
-            'description' => 'nullable',
-            'price_without_tax' => 'required|numeric',
+        return response()->json([
+            'data' => $handler->listByCategory($categoryId)
         ]);
-
-        $product = Product::create($request->all());
-
-        return response()->json($product, 201);
-    }
-
-    // Mostrar producto por ID
-    public function show(Product $product)
-    {
-        $product->load('images');
-        return response()->json($product);
-    }
-
-    // Actualizar producto
-    public function update(Request $request, Product $product)
-    {
-        $request->validate([
-            'reference' => 'required|unique:products,reference,' . $product->id,
-            'name' => 'required',
-            'description' => 'nullable',
-            'price_without_tax' => 'required|numeric',
-        ]);
-
-        $product->update($request->all());
-
-        return response()->json($product);
-    }
-
-    // Eliminar producto
-    public function destroy(Product $product)
-    {
-        $product->delete();
-        return response()->json(['message' => 'Producto eliminado correctamente']);
-    }
-
-    // Agregar imagen a un producto
-    public function addImage(Request $request, Product $product)
-    {
-        $request->validate([
-            'url' => 'required|string'
-        ]);
-
-        $image = $product->images()->create([
-            'url' => $request->url
-        ]);
-
-        return response()->json($image, 201);
-    }
-
-    // Eliminar imagen de un producto
-    public function deleteImage(Product $product, ProductImage $image)
-    {
-        // Validación de pertenencia
-        if ($image->product_id !== $product->id) {
-            return response()->json(['error' => 'La imagen no pertenece a este producto'], 400);
-        }
-
-        $image->delete();
-        return response()->json(['message' => 'Imagen eliminada']);
     }
 }

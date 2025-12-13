@@ -1,12 +1,16 @@
 <?php
-
-use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
-use App\Http\Controllers\api\AuthController;
-use App\Http\Controllers\Api\ProductController;
-use App\Http\Controllers\Api\QrCodeController;
+use App\Http\Controllers\AuthController;
 use App\Http\Controllers\UserController;
+use App\Http\Controllers\Api\CategoryController;
+use App\Http\Controllers\Api\ProductController;
 use App\Http\Controllers\RoleController;
+use App\Http\Controllers\Api\ShippingMethodController;
+use App\Http\Controllers\Api\ProvinceController;
+use App\Http\Controllers\Api\CityController;
+use App\Http\Controllers\Api\PostalCodeController;
+use App\Http\Controllers\Api\CustomerController;
+use App\Http\Controllers\Api\OrderController;
 
 /*
 |--------------------------------------------------------------------------
@@ -18,62 +22,81 @@ use App\Http\Controllers\RoleController;
 | is assigned the "api" middleware group. Enjoy building your API!
 |
 */
+Route::post('orders', [OrderController::class, 'create']); // Crear
+Route::get('/orders', [OrderController::class, 'list']);
+Route::get('/orders/{id}', [OrderController::class, 'show']);
 
-//Api de login
-Route::post('/login', [AuthController::class, 'login']);
+Route::post('register', [AuthController::class, 'register']);
+Route::post('login', [AuthController::class, 'login']);
 
-//Grupo de rutas con autenticación
-Route::middleware('auth:sanctum')->group(function () {
+// Rutas para provincias
+Route::prefix('provinces')->group(function () {
+    Route::get('/', [ProvinceController::class, 'list']);
+    Route::get('/city/{cityId}', [ProvinceController::class, 'getByCity']);
+});
 
-    // Info del usuario logueado
-    Route::get('/me', [AuthController::class, 'me']);
-    Route::post('/logout', [AuthController::class, 'logout']);
+// Rutas para ciudades
+Route::prefix('cities')->group(function () {
+    Route::get('/', [CityController::class, 'list']);
+    Route::get('/postal/{postalCode}', [CityController::class, 'getByPostalCode']);
+});
 
-    // CRUD de usuarios (solo admins)
-    Route::middleware('role:Super usuario|Administrador')->group(function () {
+// Rutas para códigos postales
+Route::prefix('postal-codes')->group(function () {
+    Route::get('/', [PostalCodeController::class, 'list']);
+});
 
-        Route::get('/users', [UserController::class, 'index']);        // Listar usuarios
-        Route::post('/users', [UserController::class, 'store']);       // Crear usuario con rol
-        Route::get('/users/{id}', [UserController::class, 'show']);    // Ver usuario
-        Route::put('/users/{id}', [UserController::class, 'update']);  // Editar usuario
-        Route::delete('/users/{id}', [UserController::class, 'destroy']); // Eliminar usuario
-        Route::post('/users/{id}/assign-role', [UserController::class, 'assignRole']); // Asignar rol
+Route::get('qr/{code}', [CategoryController::class, 'showByCode']);
+
+
+Route::middleware(['auth:sanctum'])->group(function () {
+    Route::get('logout', [AuthController::class, 'logout']);
+});
+
+Route::middleware(['auth:sanctum', 'role:admin'])->group(function () {
+
+    // API de Usuarios (solo admin)
+    Route::apiResource('users', UserController::class);
+
+    // API de Roles (solo admin)
+    Route::apiResource('roles', RoleController::class);
+
+    // Categorías
+    Route::post('/categories', [CategoryController::class,'create']);
+    Route::get('/categories', [CategoryController::class,'list']);
+    Route::get('/categories/{id}', [CategoryController::class,'show']);
+    Route::put('/categories/{id}', [CategoryController::class,'update']);
+    Route::delete('/categories/{id}', [CategoryController::class,'destroy']);
+
+    // Productos
+    Route::post('/products', [ProductController::class,'create']);
+    Route::get('/products', [ProductController::class,'list']);
+    Route::get('/products/{id}', [ProductController::class,'show']);
+    Route::put('/products/{id}', [ProductController::class,'update']);
+    Route::delete('/products/{id}', [ProductController::class,'destroy']);
+
+    /**
+     * Rutas para la gestión de métodos de envío.
+     */
+    Route::prefix('shipping-methods')->group(function () {
+        Route::post('/',  [ShippingMethodController::class, 'create']);   // Crear
+        Route::get('/',   [ShippingMethodController::class, 'list']);     // Listar
+        Route::get('/{id}', [ShippingMethodController::class, 'show']);   // Ver uno
+        Route::put('/{id}', [ShippingMethodController::class, 'update']); // Actualizar
+        Route::delete('/{id}', [ShippingMethodController::class, 'destroy']); // Eliminar
     });
-
-    // CRUD de roles
-    Route::middleware('role:Super usuario|Administrador')->group(function () {
-        Route::get('/roles', [RoleController::class, 'index']);
-        Route::post('/roles', [RoleController::class, 'store']);
-        Route::get('/roles/{id}', [RoleController::class, 'show']);
-        Route::put('/roles/{id}', [RoleController::class, 'update']);
-        Route::delete('/roles/{id}', [RoleController::class, 'destroy']);
-    });
 });
 
 
-//Rutas de productos
-Route::get('/qr/{code}/products', [ProductController::class, 'getProductsByQr']);
+// Productos por categoría
+Route::get('/categories/{categoryId}/products', [ProductController::class,'listByCategory']);
 
-//Gestión de QRs por los momentos sin autenticación
-Route::prefix('qr')->group(function () {
-    Route::get('/', [QrCodeController::class, 'index']);           // Listar QRs
-    Route::post('/', [QrCodeController::class, 'store']);          // Crear QR
-    Route::get('/{qr}', [QrCodeController::class, 'show']);       // Mostrar QR
-    Route::put('/{qr}', [QrCodeController::class, 'update']);     // Editar QR
-    Route::delete('/{qr}', [QrCodeController::class, 'destroy']); // Eliminar QR
-
-    Route::post('/{qr}/assign-products', [QrCodeController::class, 'assignProducts']); // Asignar productos
+// Rutas para clientes
+Route::prefix('customers')->group(function () {
+    Route::post('/', [CustomerController::class, 'create']);
+    Route::get('/', [CustomerController::class, 'list']);
+    Route::get('/email/{email}', [CustomerController::class, 'show']);   // Consultar por email
+    Route::put('/email/{email}', [CustomerController::class, 'update']); // Modificar por email
+    Route::delete('/nif/{nif}', [CustomerController::class, 'destroy']); // Eliminar por NIF
 });
 
-// Rutas de productos
-Route::prefix('products')->group(function () {
-    Route::get('/', [ProductController::class, 'index']);       // Listar productos
-    Route::post('/', [ProductController::class, 'store']);      // Crear producto
-    Route::get('/{product}', [ProductController::class, 'show']); // Ver producto
-    Route::put('/{product}', [ProductController::class, 'update']); // Actualizar
-    Route::delete('/{product}', [ProductController::class, 'destroy']); // Eliminar
-
-    // Manejo de imágenes
-    Route::post('/{product}/images', [ProductController::class, 'addImage']);
-    Route::delete('/{product}/images/{image}', [ProductController::class, 'deleteImage']);
-});

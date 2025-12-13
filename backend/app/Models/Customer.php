@@ -3,23 +3,22 @@
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 class Customer extends Model
 {
     protected $fillable = [
-        'company_name',
-        'contact_name',
-        'email',
-        'phone',
+        'nif', 'email', 'name', 'phone', 'address', 'address_extra', 'postal_code_id'
     ];
 
-    public function addresses()
+    public function postalCode(): BelongsTo
     {
-        return $this->hasMany(Address::class);
+        return $this->belongsTo(PostalCode::class);
     }
 
-    public function orders()
+    public function orders(): HasMany
     {
-        return $this->hasMany(Order::class, 'client_id');
+        return $this->hasMany(Order::class);
     }
 }

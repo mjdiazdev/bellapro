@@ -3,48 +3,35 @@
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 class Order extends Model
 {
     protected $fillable = [
-        'client_id',
-        'billing_address_id',
-        'shipping_address_id',
-        'logistic_center_id',
-        'subtotal',
-        'vat',
-        'total',
-        'shipping_type',
-        'status'
+        'customer_id', 'delivery_email', 'delivery_name', 'delivery_nif',
+        'delivery_address', 'delivery_address_extra', 'delivery_phone',
+        'delivery_postal_code_id', 'shipping_method_id',
+        'subtotal', 'shipping_price', 'total', 'status'
     ];
 
-    public function client()
+    public function customer(): BelongsTo
     {
         return $this->belongsTo(Customer::class);
     }
 
-    public function billingAddress()
+    public function postalCode(): BelongsTo
     {
-        return $this->belongsTo(Address::class, 'billing_address_id');
+        return $this->belongsTo(PostalCode::class, 'delivery_postal_code_id');
     }
 
-    public function shippingAddress()
+    public function shippingMethod(): BelongsTo
     {
-        return $this->belongsTo(Address::class, 'shipping_address_id');
+        return $this->belongsTo(ShippingMethod::class);
     }
 
-    public function logisticCenter()
-    {
-        return $this->belongsTo(LogisticCenter::class);
-    }
-
-    public function items()
+    public function items(): HasMany
     {
         return $this->hasMany(OrderItem::class);
-    }
-
-    public function notifications()
-    {
-        return $this->hasMany(Notification::class);
     }
 }

@@ -3,23 +3,23 @@
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
+/**
+ * Modelo Product: representa un producto dentro de una categoría.
+ */
 class Product extends Model
 {
+    // Campos permitidos para asignación masiva
     protected $fillable = [
-        'reference',
-        'name',
-        'description',
-        'price_without_tax',
+        'category_id', 'name', 'reference', 'price', 'description', 'photo_url'
     ];
 
-    public function images()
+    /**
+     * Relación: un producto pertenece a una categoría.
+     */
+    public function category(): BelongsTo
     {
-        return $this->hasMany(ProductImage::class);
-    }
-
-    public function qrCodes()
-    {
-        return $this->belongsToMany(QrCode::class, 'product_qr');
+        return $this->belongsTo(Category::class);
     }
 }
