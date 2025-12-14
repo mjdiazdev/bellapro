@@ -60,4 +60,36 @@ class CustomerController extends Controller
 
         return response()->json(['message' => 'Cliente eliminado correctamente']);
     }
+
+    public function destroyById(CustomerHandler $handler, $id)
+    {
+        if (!$handler->deleteById($id)) {
+            return response()->json(['message' => 'Cliente no encontrado'], 404);
+        }
+
+        return response()->json(['message' => 'Cliente eliminado correctamente']);
+    }
+
+    public function updateById(Request $request, CustomerHandler $handler, $id)
+    {
+        try {
+            $customer = $handler->updateById($id, $request->all());
+            if (!$customer) return response()->json(['message' => 'Cliente no encontrado'], 404);
+
+            return response()->json([
+                'message' => 'Cliente actualizado correctamente',
+                'data' => $customer
+            ]);
+        } catch (\Exception $e) {
+            return response()->json(['message' => $e->getMessage()], 422);
+        }
+    }
+
+    public function showById(CustomerHandler $handler, $id)
+    {
+        $customer = $handler->findById($id);
+        if (!$customer) return response()->json(['message' => 'Cliente no encontrado'], 404);
+
+        return response()->json(['data' => $customer]);
+    }
 }

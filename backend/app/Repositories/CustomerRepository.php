@@ -63,4 +63,38 @@ class CustomerRepository
 
         return (bool) $customer->delete();
     }
+
+    /**
+     * Obtener un customer por su ID
+     */
+    public function findById(int $id): ?Customer
+    {
+        return Customer::with([
+            'postalCode.city.province' // Trae postalCode -> city -> province
+        ])->find($id);
+    }
+
+
+    /**
+     * Eliminar customer por ID
+     */
+    public function deleteById(int $id): bool
+    {
+        $customer = $this->findById($id);
+        if (!$customer) return false;
+
+        return (bool) $customer->delete();
+    }
+
+    /**
+     * Actualizar customer por ID
+     */
+    public function updateById(int $id, array $data): ?Customer
+    {
+        $customer = $this->findById($id);
+        if (!$customer) return null;
+
+        $customer->update($data);
+        return $customer;
+    }
 }

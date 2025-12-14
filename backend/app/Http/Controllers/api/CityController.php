@@ -31,4 +31,18 @@ class CityController extends Controller
 
         return response()->json(['data' => $city]);
     }
+
+    /**
+     * Obtener ciudades por provincia
+     */
+    public function getByProvince(CityHandler $handler, $provinceId)
+    {
+        $cities = $handler->getByProvince($provinceId);
+
+        if (!$cities) {
+            return response()->json(['message' => 'Ciudades no encontradas'], 404);
+        }
+
+        return response()->json(['data' => $cities]);
+    }
 }

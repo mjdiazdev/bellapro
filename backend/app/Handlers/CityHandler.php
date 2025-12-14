@@ -19,4 +19,10 @@ class CityHandler
     {
         return $this->cities->findByPostalCode($postalCode);
     }
+
+    // Obtener ciudades por provincia.
+    public function getByProvince(int $provinceId): array
+    {
+        return $this->cities->CitiesByProvince($provinceId);
+    }
 }

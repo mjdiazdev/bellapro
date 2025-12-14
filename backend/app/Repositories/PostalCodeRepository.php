@@ -15,4 +15,16 @@ class PostalCodeRepository
     {
         return PostalCode::where('code', $code)->first();
     }
+
+    public function PostalCodesByCity(int $cityId): array
+    {
+        return PostalCode::where('city_id', $cityId)
+            ->get()
+            ->toArray();
+    }
+
+    public function findById(int $id): ?PostalCode
+    {
+        return PostalCode::find($id);
+    }
 }

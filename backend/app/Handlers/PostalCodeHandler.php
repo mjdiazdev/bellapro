@@ -13,4 +13,10 @@ class PostalCodeHandler
     {
         return $this->postalCodes->all();
     }
+
+    // Obtener códigos postales por ciudad.
+    public function getByCity(int $cityId): array
+    {
+        return $this->postalCodes->PostalCodesByCity($cityId);
+    }
 }

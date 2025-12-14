@@ -20,4 +20,12 @@ class CityRepository
     {
         return City::find($id);
     }
+
+    public function CitiesByProvince(int $provinceId): array
+    {
+        return City::where('province_id', $provinceId)
+            ->get()
+            ->toArray();
+    }
+
 }

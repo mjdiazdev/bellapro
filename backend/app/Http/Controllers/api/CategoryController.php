@@ -130,7 +130,9 @@ class CategoryController extends Controller
      */
     public function list(CategoryHandler $handler)
     {
-        return response()->json($handler->list());
+        return response()->json([
+            'data' => $handler->list()
+        ]);
     }
 
     /**

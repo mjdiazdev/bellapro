@@ -38,12 +38,13 @@ Route::prefix('provinces')->group(function () {
 // Rutas para ciudades
 Route::prefix('cities')->group(function () {
     Route::get('/', [CityController::class, 'list']);
-    Route::get('/postal/{postalCode}', [CityController::class, 'getByPostalCode']);
+    Route::get('/province/{provinceId}', [CityController::class, 'getByProvince']);
 });
 
 // Rutas para códigos postales
 Route::prefix('postal-codes')->group(function () {
-    Route::get('/', [PostalCodeController::class, 'list']);
+    //Route::get('/', [PostalCodeController::class, 'list']);
+    Route::get('/city/{cityId}', [PostalCodeController::class, 'getByCity']);
 });
 
 Route::get('qr/{code}', [CategoryController::class, 'showByCode']);
@@ -95,6 +96,9 @@ Route::get('/categories/{categoryId}/products', [ProductController::class,'listB
 Route::prefix('customers')->group(function () {
     Route::post('/', [CustomerController::class, 'create']);
     Route::get('/', [CustomerController::class, 'list']);
+    Route::get('/{id}', [CustomerController::class, 'showById']);
+    Route::put('/{id}', [CustomerController::class, 'updateById']);
+    Route::delete('/{id}', [CustomerController::class, 'destroyById']);
     Route::get('/email/{email}', [CustomerController::class, 'show']);   // Consultar por email
     Route::put('/email/{email}', [CustomerController::class, 'update']); // Modificar por email
     Route::delete('/nif/{nif}', [CustomerController::class, 'destroy']); // Eliminar por NIF

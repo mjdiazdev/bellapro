@@ -21,7 +21,7 @@ class ProductRepository
      */
     public function findById(int $id): ?Product
     {
-        return Product::find($id);
+        return Product::with('category')->find($id);
     }
 
     /**
@@ -60,6 +60,6 @@ class ProductRepository
      */
     public function all(): array
     {
-        return Product::all()->toArray();
+        return Product::with('category')->get()->toArray();
     }
 }

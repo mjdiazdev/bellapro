@@ -5,6 +5,7 @@ namespace App\Handlers;
 use App\Repositories\CustomerRepository;
 use App\Repositories\PostalCodeRepository;
 use Illuminate\Support\Facades\Validator;
+use Illuminate\Validation\Rule;
 use Illuminate\Validation\ValidationException;
 
 /**
@@ -30,7 +31,7 @@ class CustomerHandler
             'phone' => 'nullable|string|max:20',
             'address' => 'nullable|string|max:255',
             'address_extra' => 'nullable|string|max:255',
-            'postal_code' => 'required|string'
+            'postal_code_id' => 'required|integer'
         ]);
 
         if ($validator->fails()) {
@@ -38,13 +39,10 @@ class CustomerHandler
         }
 
         // Validar existencia del código postal
-        $postalCode = $this->postalCodes->findByCode($data['postal_code']);
+        $postalCode = $this->postalCodes->findById($data['postal_code_id']);
         if (!$postalCode) {
             throw new \Exception('Código postal no encontrado');
         }
-
-        $data['postal_code_id'] = $postalCode->id;
-        unset($data['postal_code']);
 
         return $this->customers->create($data);
     }
@@ -76,7 +74,7 @@ class CustomerHandler
             'phone' => 'nullable|string|max:20',
             'address' => 'nullable|string|max:255',
             'address_extra' => 'nullable|string|max:255',
-            'postal_code' => 'sometimes|string'
+            'postal_code_id' => 'sometimes|string'
         ]);
 
         if ($validator->fails()) {
@@ -84,12 +82,9 @@ class CustomerHandler
         }
 
         // Validar código postal si se proporciona
-        if (isset($data['postal_code'])) {
-            $postalCode = $this->postalCodes->findByCode($data['postal_code']);
+        if (isset($data['postal_code_id'])) {
+            $postalCode = $this->postalCodes->findById($data['postal_code_id']);
             if (!$postalCode) throw new \Exception('Código postal no encontrado');
-
-            $data['postal_code_id'] = $postalCode->id;
-            unset($data['postal_code']);
         }
 
         return $this->customers->updateByEmail($email, $data);
@@ -101,5 +96,52 @@ class CustomerHandler
     public function deleteByNif(string $nif): bool
     {
         return $this->customers->deleteByNif($nif);
+    }
+
+    /**
+     * Obtener un customer por su ID
+     */
+    public function findById(int $id)
+    {
+        return $this->customers->findById($id);
+    }
+
+    /**
+     * Eliminar customer por ID
+     */
+    public function deleteById(int $id): bool
+    {
+        return $this->customers->deleteById($id);
+    }
+
+    /**
+     * Actualizar customer por ID
+     */
+    public function updateById(int $id, array $data)
+    {
+        // Validación de campos
+        $validator = Validator::make($data, [
+            'nif' => [
+                'required',
+                'string',
+                Rule::unique('customers', 'nif')->ignore($id)
+            ],
+            'name' => 'sometimes|string|max:255',
+            'email' => [
+                'required',
+                'email',
+                Rule::unique('customers', 'email')->ignore($id)
+            ],
+            'name' => 'sometimes|string|max:255',
+            'phone' => 'nullable|string|max:20',
+            'address' => 'nullable|string|max:255',
+            'address_extra' => 'nullable|string|max:255',
+            'postal_code_id' => 'sometimes|string'
+        ]);
+
+        if ($validator->fails()) {
+            throw new ValidationException($validator);
+        }
+        return $this->customers->updateById($id, $data);
     }
 }

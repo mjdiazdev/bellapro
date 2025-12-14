@@ -17,4 +17,18 @@ class PostalCodeController extends Controller
     {
         return response()->json(['data' => $handler->list()]);
     }
+
+    /**
+     * Obtener códigos postales por ciudad
+     */
+    public function getByCity(PostalCodeHandler $handler, $cityId)
+    {
+        $postalCodes = $handler->getByCity($cityId);
+
+        if (!$postalCodes) {
+            return response()->json(['message' => 'Códigos postales no encontrados'], 404);
+        }
+
+        return response()->json(['data' => $postalCodes]);
+    }
 }
