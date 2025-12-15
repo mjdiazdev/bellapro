@@ -30,7 +30,9 @@ class CustomerRepository
      */
     public function findByEmail(string $email): ?Customer
     {
-        return Customer::where('email', $email)->first();
+        return Customer::with([
+            'postalCode.city.province' // Trae postalCode -> city -> province
+        ])->find(Customer::where('email', $email)->value('id'));
     }
 
     /**
