@@ -66,28 +66,46 @@ class OrderHandler
             // =======================
             // CUSTOMER (crear o actualizar)
             // =======================
+
+            // 1. Extraer datos del cliente
             $customerData = $data['customer'];
 
+            // 2. Validar campos mínimos obligatorios
+            $validator = Validator::make($customerData, [
+                'nif' => 'required|string',
+                'email' => 'required|email',
+                'name' => 'required|string',
+                'postal_code' => 'required|string',
+            ]);
+
+            if ($validator->fails()) {
+                throw new ValidationException($validator);
+            }
+
+            // 3. Obtener ID del código postal desde el código
             $postalCode = $this->postalCodes->findByCode($customerData['postal_code']);
             if (!$postalCode) {
                 throw new \Exception('Código postal del cliente no válido');
             }
 
+            // 4. Sustituir postal_code por postal_code_id
             $customerData['postal_code_id'] = $postalCode->id;
             unset($customerData['postal_code']);
 
+            // 5. Buscar cliente por email
             $customer = $this->customers->findByEmail($customerData['email']);
 
+            // 6. Crear o actualizar cliente
             if ($customer) {
-                $customer->update($customerData);
+                $customer->update($customerData); //Si existe, actualiza
             } else {
-                $customer = $this->customers->create($customerData);
+                $customer = $this->customers->create($customerData); //Si no existe, crea uno nuevo
             }
 
             // =======================
             // MÉTODO DE ENVÍO
             // =======================
-            $shippingMethod = $this->shippingMethods->findById($data['shipping_method_id']);
+            $shippingMethod = $this->shippingMethods->findById($data['shipping_method_id']); //Obtener método de envío
             if (!$shippingMethod) {
                 throw new \Exception('Método de envío no válido');
             }
@@ -171,16 +189,17 @@ class OrderHandler
             DB::commit();
 
             // =======================
-            // PAYPAL
+            // EN CASO DE PAYPAL
             // =======================
-            $paypalService = new PayPalService();
-            $paypalOrder = $paypalService->createOrder($total);
-
-            $this->payments->updateStatus(
-                $order->id,
-                'pending',
-                ['paypal_order_id' => $paypalOrder['id']]
-            );
+            if ($data['payment']['method'] === 'paypal') {
+                $paypalService = new PayPalService();
+                $paypalOrder = $paypalService->createOrder($total);
+                $this->payments->updateStatus(
+                    $order->id,
+                    'pending',
+                    ['paypal_order_id' => $paypalOrder['id']]
+                );
+            }
 
             // =======================
             // ENVIAR CORREO AL CLIENTE
@@ -198,18 +217,48 @@ class OrderHandler
                 ];
             }
 
-            // Preparar payload completo
+            // =======================
+            // CÁLCULO DE IVA
+            // =======================
+
+            // Base imponible: subtotal + envío
+            $baseImponible = $subtotal + $shippingPrice;
+
+            // IVA 21%
+            $iva = $baseImponible * 0.21;
+
+            // Total final con IVA
+            $totalConIva = $baseImponible + $iva;
+
+
+            // =======================
+            // PREPARAR DATOS PARA CORREO
+            // =======================
             $orderForMail = [
-                'id' => $order->id,
+                'order_number' => $order->id,
                 'customer_id' => $customer->id,
-                'delivery_name' => $order->delivery_name,
+                'customer_name' => $order->delivery_name,
+                'purchase_date' => now()->format('d/m/Y'),
+
                 'delivery_email' => $order->delivery_email,
+
                 'subtotal' => $subtotal,
-                'shipping_price' => $shippingPrice,
-                'shipping_method_name' => $shippingMethod->name,
-                'total' => $total,
+
+                'shipping' => [
+                    'method_name' => $shippingMethod->name,
+                    'price' => $shippingPrice
+                ],
+
+                'iva_percentage' => 21,
+                'iva_amount' => $iva,
+
+                'total_without_iva' => $baseImponible,
+                'total_with_iva' => $totalConIva,
+
                 'items' => $orderItemsData
             ];
+
+
 
             $mailService->sendPurchaseMail($order->delivery_email, $orderForMail);
 

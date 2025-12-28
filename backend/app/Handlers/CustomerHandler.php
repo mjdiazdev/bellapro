@@ -122,13 +122,13 @@ class CustomerHandler
         // Validación de campos
         $validator = Validator::make($data, [
             'nif' => [
-                'required',
+                'sometimes',
                 'string',
                 Rule::unique('customers', 'nif')->ignore($id)
             ],
             'name' => 'sometimes|string|max:255',
             'email' => [
-                'required',
+                'sometimes',
                 'email',
                 Rule::unique('customers', 'email')->ignore($id)
             ],
@@ -136,7 +136,7 @@ class CustomerHandler
             'phone' => 'nullable|string|max:20',
             'address' => 'nullable|string|max:255',
             'address_extra' => 'nullable|string|max:255',
-            'postal_code_id' => 'sometimes|string'
+            'postal_code_id' => 'sometimes|integer|exists:postal_codes,id',
         ]);
 
         if ($validator->fails()) {

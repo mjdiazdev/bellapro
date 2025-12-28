@@ -35,11 +35,11 @@ class CategoryHandler
             new RendererStyle(300),
             new \BaconQrCode\Renderer\Image\SvgImageBackEnd()
         );
-
         $writer = new Writer($renderer);
 
-        // Contenido del QR: URL pública con código de categoría
-        $qrContent = url('/category/' . $category->code);
+        // ⚡ Cambiar URL del QR al frontend
+        $frontendUrl = env('FRONTEND_URL', 'http://localhost:3000');
+        $qrContent = $frontendUrl . '/store?qr=' . $category->code;
 
         // Generar SVG del QR
         $qrImage = $writer->writeString($qrContent);
@@ -56,6 +56,7 @@ class CategoryHandler
 
         return $category;
     }
+
 
     /**
      * Obtener una categoría por ID.

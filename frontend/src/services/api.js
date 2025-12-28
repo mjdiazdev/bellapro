@@ -1,8 +1,9 @@
 import axios from 'axios';
+const BACKEND_URL = process.env.REACT_APP_BACKEND_URL;
 
-// Configuramos el cliente de la API
+// Configuración del cliente de la API
 const api = axios.create({
-  baseURL: 'http://localhost:8000/api',
+  baseURL: `${BACKEND_URL}/api`,
 });
 
 api.interceptors.request.use((config) => {

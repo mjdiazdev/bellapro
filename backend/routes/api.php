@@ -22,11 +22,9 @@ use App\Http\Controllers\Api\OrderController;
 | is assigned the "api" middleware group. Enjoy building your API!
 |
 */
-Route::post('orders', [OrderController::class, 'create']); // Crear
-Route::get('/orders', [OrderController::class, 'list']);
-Route::get('/orders/{id}', [OrderController::class, 'show']);
+Route::post('orders', [OrderController::class, 'create']); // Crear una orden
 
-Route::post('register', [AuthController::class, 'register']);
+// Rutas para autenticación
 Route::post('login', [AuthController::class, 'login']);
 
 // Rutas para provincias
@@ -55,6 +53,8 @@ Route::middleware(['auth:sanctum'])->group(function () {
 });
 
 Route::middleware(['auth:sanctum', 'role:admin'])->group(function () {
+    // Rutas para autenticación
+    Route::post('logout', [AuthController::class, 'logout']);
 
     // API de Usuarios (solo admin)
     Route::apiResource('users', UserController::class);
@@ -86,6 +86,12 @@ Route::middleware(['auth:sanctum', 'role:admin'])->group(function () {
         Route::put('/{id}', [ShippingMethodController::class, 'update']); // Actualizar
         Route::delete('/{id}', [ShippingMethodController::class, 'destroy']); // Eliminar
     });
+
+    /**
+     * Rutas para la gestión de ordenes de pedido
+     */
+    Route::get('/orders', [OrderController::class, 'list']);
+    Route::get('/orders/{id}', [OrderController::class, 'show']);
 });
 
 

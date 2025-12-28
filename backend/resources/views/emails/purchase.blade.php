@@ -75,9 +75,49 @@
                         </tbody>
                     </table>
 
-                    <h3 style="text-align:right; margin-top:10px;">
-                        Total: €{{ number_format($data['total'], 2, ',', '.') }}
-                    </h3>
+                    <!-- Totales -->
+                    <table width="100%" style="margin-top:10px;">
+                        <tr>
+                            <td style="text-align:right; color:#444; padding:4px 0;">
+                                Subtotal:
+                            </td>
+                            <td style="text-align:right; padding:4px 0; width:120px;">
+                                €{{ number_format($data['subtotal'], 2, ',', '.') }}
+                            </td>
+                        </tr>
+
+                        <tr>
+                            <td style="text-align:right; color:#444; padding:4px 0;">
+                                Envío ({{ $data['shipping']['method_name'] }}):
+                            </td>
+                            <td style="text-align:right; padding:4px 0;">
+                                €{{ number_format($data['shipping']['price'], 2, ',', '.') }}
+                            </td>
+                        </tr>
+
+                        <tr>
+                            <td style="text-align:right; color:#444; padding:4px 0;">
+                                IVA (21%):
+                            </td>
+                            <td style="text-align:right; padding:4px 0;">
+                                €{{ number_format($data['iva_amount'], 2, ',', '.') }}
+                            </td>
+                        </tr>
+
+                        <tr>
+                            <td colspan="2" style="border-top:1px solid #ccc; padding-top:8px;"></td>
+                        </tr>
+
+                        <tr>
+                            <td style="text-align:right; font-size:18px; font-weight:bold; padding-top:6px;">
+                                Total:
+                            </td>
+                            <td style="text-align:right; font-size:18px; font-weight:bold; padding-top:6px;">
+                                €{{ number_format($data['total_with_iva'], 2, ',', '.') }}
+                            </td>
+                        </tr>
+                    </table>
+
 
                     <hr style="border: none; border-top:2px solid #e91e63; margin:20px 0;">
 

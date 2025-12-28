@@ -1,58 +1,58 @@
 import React, { useState } from 'react';
 import api from '../services/api';
 import { useNavigate } from 'react-router-dom';
+import LoginForm from '../components/Admin/Login/LoginForm';
+import Footer from '../components/common/Footer';
 
 export default function Login() {
+  // Mantenemos tus estados originales
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState(null);
+  const [isLoading, setIsLoading] = useState(false); // Nuevo: para feedback visual
 
   const navigate = useNavigate();
 
   const submit = async (e) => {
     e.preventDefault();
+    setIsLoading(true);
+    setError(null);
+
     try {
       const res = await api.post('/login', { email, password });
+      
+      // Guardado de sesión original
       localStorage.setItem('token', res.data.token);
-      localStorage.setItem('user', JSON.stringify(res.data.user));
+      if (res.data.user) {
+        localStorage.setItem('user', JSON.stringify(res.data.user));
+      }
+
+      // Redirección
       navigate('/dashboard');
     } catch (err) {
-      setError(err.response?.data?.message || 'Error en login');
+      // Manejo de error original potenciado
+      setError(err.response?.data?.message || 'Error en las credenciales');
+    } finally {
+      setIsLoading(false);
     }
   };
 
+  // Renderizamos pasando las funciones al componente de BellaPro
   return (
-    <div className="container d-flex vh-100 align-items-center justify-content-center">
-      <div className="card p-4 shadow" style={{ maxWidth: 420, width: '100%' }}>
-        <h3 className="mb-3">Iniciar sesión</h3>
-
-        {error && <div className="alert alert-danger">{error}</div>}
-
-        <form onSubmit={submit}>
-          <div className="mb-3">
-            <label className="form-label">Correo</label>
-            <input
-              className="form-control"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-            />
-          </div>
-
-          <div className="mb-3">
-            <label className="form-label">Contraseña</label>
-            <input
-              type="password"
-              className="form-control"
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-            />
-          </div>
-
-          <button className="btn btn-primary w-100" type="submit">
-            Entrar
-          </button>
-        </form>
-      </div>
+    <div className="d-flex">
+      <LoginForm 
+        email={email}
+        setEmail={setEmail}
+        password={password}
+        setPassword={setPassword}
+        error={error}
+        submit={submit}
+        isLoading={isLoading}
+      />  
+    
+      <Footer/>
     </div>
+ 
   );
+  
 }

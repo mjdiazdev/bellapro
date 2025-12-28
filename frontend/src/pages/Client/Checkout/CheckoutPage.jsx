@@ -1,0 +1,200 @@
+import React, { useState, useEffect } from "react";
+// 1. Importar useNavigate de react-router-dom
+import { useNavigate } from "react-router-dom"; 
+import CheckoutHeader from "../../../components/common/HeaderClient";
+import BillingForm from "../../../components/Client/Checkout/BillingForm";
+import ShippingForm from "../../../components/Client/Checkout/ShippingForm";
+import ShippingMethod from "../../../components/Client/Checkout/ShippingMethod";
+import PaymentMethod from "../../../components/Client/Checkout/PaymentMethod";
+import OrderSummary from "../../../components/Client/Checkout/OrderSummary";
+import Footer from "../../../components/common/Footer";
+import EmailCheckout from "../../../components/Client/Checkout/EmailCheckout";
+import { createItem } from "../../../services/apiService";
+import { useCart } from "../../../context/CartContext";
+import Button from "../../../components/common/variant/Button";
+
+export default function CheckoutPage() {
+  const { cartProducts, clearCart } = useCart();
+  // 2. Inicializar el hook de navegación
+  const navigate = useNavigate(); 
+
+  const productsInCart = cartProducts.filter(p => p.quantity > 0);
+
+  const [customer, setCustomer] = useState(null);
+
+  // --- LOGICA DE SINCRONIZACIÓN DE CLIENTE ---
+  useEffect(() => {
+    if (!customer) return;
+
+    setBillingForm(prev => ({
+      ...prev,
+      nif: customer.nif || "",
+      name: customer.name || "",
+      phone: customer.phone || "",
+      address: customer.address || "",
+      address_extra: customer.address_extra || "",
+      postal_code: customer.postal_code?.code || customer.postal_code || "",
+      province_id: customer.postal_code?.city?.province?.id || "",
+      city_id: customer.postal_code?.city?.id || "",
+      postal_code_id: customer.postal_code?.id || ""
+    }));
+  }, [customer]);
+
+  const [shippingDifferent, setShippingDifferent] = useState(false);
+
+  const [billingForm, setBillingForm] = useState({
+    nif: "",
+    email: "",
+    name: "",
+    phone: "",
+    address: "",
+    address_extra: "",
+    postal_code: "",
+    province_id: "",
+    city_id: "",
+    postal_code_id: ""
+  });
+
+  const [shippingForm, setShippingForm] = useState({
+    nif: "",
+    name: "",
+    address: "",
+    address_extra: "",
+    phone: "",
+    postal_code: "",
+    province_id: "",
+    city_id: "",
+    postal_code_id: ""
+  });
+
+  const [selectedShipping, setSelectedShipping] = useState(1);
+  const [selectedPayment, setSelectedPayment] = useState({
+    method: "paypal",
+    amount: productsInCart.reduce((sum, p) => sum + p.price * p.quantity, 0),
+    details: { intent: "CAPTURE" }
+  });
+
+  // --- PROCESAR ORDEN ---
+  const handlePlaceOrder = async () => {
+    if (!customer?.email) {
+      return alert("Debes ingresar un cliente válido");
+    }
+
+    if (productsInCart.length === 0) {
+      return alert("El carrito está vacío");
+    }
+
+    if (!billingForm.nif || !billingForm.postal_code) {
+      return alert("Completa los datos de facturación");
+    }
+
+    if (shippingDifferent && !shippingForm.postal_code) {
+      return alert("Completa los datos de envío");
+    }
+
+    try {
+      const billingData = {
+        nif: billingForm.nif,
+        email: customer.email,
+        name: billingForm.name,
+        phone: billingForm.phone,
+        address: billingForm.address,
+        address_extra: billingForm.address_extra,
+        postal_code: billingForm.postal_code 
+      };
+
+      const deliveryData = shippingDifferent
+        ? {
+            nif: shippingForm.nif,
+            name: shippingForm.name,
+            phone: shippingForm.phone,
+            address: shippingForm.address,
+            address_extra: shippingForm.address_extra,
+            postal_code: shippingForm.postal_code 
+          }
+        : { ...billingData };
+
+      const payload = {
+        customer: billingData,
+        delivery: deliveryData,
+        shipping_method_id: selectedShipping,
+        items: productsInCart.map(p => ({
+          product_id: p.id,
+          quantity: p.quantity
+        })),
+        payment: selectedPayment
+      };
+
+      // 3. Crear el item en la API
+      await createItem("orders", payload);
+
+      // 4. Limpiar el carrito
+      clearCart();
+
+      // 5. REDIRIGIR A LA PÁGINA DE GRACIAS
+      // Usamos replace: true para que el usuario no pueda volver al checkout con el botón "atrás"
+      navigate("/thanks", { replace: true });
+
+    } catch (error) {
+      alert(
+        "Error al registrar la orden: " +
+        (error.response?.data?.message || error.message)
+      );
+    }
+  };
+
+  return (
+    <div className="min-h-screen bg-pink-50">
+      <CheckoutHeader />
+
+      <div className="max-w-6xl mx-auto px-6 py-10 pt-[80px] grid grid-cols-1 lg:grid-cols-2 gap-12">
+        {/* LADO DERECHO: RESUMEN */}
+        <div className="order-1 lg:order-2">
+          <div className="lg:sticky lg:top-24">
+            <OrderSummary
+              products={productsInCart}
+              items={productsInCart.length}
+              subtotal={selectedPayment.amount}
+              total={selectedPayment.amount}
+            />
+            <Button onClick={handlePlaceOrder} fullWidth>
+              Completar Pago
+            </Button>
+          </div>
+        </div>
+
+        {/* LADO IZQUIERDO: FORMULARIOS */}
+        <div className="space-y-10 order-2 lg:order-1">
+          <EmailCheckout onCustomerLoaded={setCustomer} />
+
+          <BillingForm
+            billingForm={billingForm}
+            setBillingForm={setBillingForm}
+            shippingDifferent={shippingDifferent}
+            setShippingDifferent={setShippingDifferent}
+          />
+
+          {shippingDifferent && (
+            <ShippingForm
+              billingCustomer={billingForm}
+              shippingForm={shippingForm}
+              setShippingForm={setShippingForm}
+            />
+          )}
+
+          <ShippingMethod
+            selectedShipping={selectedShipping}
+            setSelectedShipping={setSelectedShipping}
+          />
+
+          <PaymentMethod
+            selectedPayment={selectedPayment}
+            setSelectedPayment={setSelectedPayment}
+          />
+        </div>
+      </div>
+
+      <Footer />
+    </div>
+  );
+}
