@@ -36,11 +36,15 @@ export default function OrdersListPage() {
         <main className="flex-1 p-6 md:ml-64 bg-gray-50 overflow-y-auto">
           <div className="container mx-auto card p-6 bg-white rounded-xl shadow-lg">
             <h1 className="text-2xl font-bold text-gray-800 mb-6">Pedidos</h1>
-            {loading ? (
-              <p>Cargando pedidos...</p>
-            ) : (
-              <OrdersList orders={orders} />
+
+            {/* Tabla con scroll horizontal en móviles */}
+            <div className="overflow-x-auto">
+              {loading ? (
+                <p>Cargando pedidos...</p>
+              ) : (
+                <OrdersList orders={orders} />
             )}
+            </div>            
           </div>
         </main>
       </div>

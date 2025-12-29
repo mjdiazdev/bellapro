@@ -22,4 +22,10 @@ class Product extends Model
     {
         return $this->belongsTo(Category::class);
     }
+
+    public function stock()
+    {
+        // Un producto tiene un registro de stock único
+        return $this->hasOne(ProductStock::class);
+    }
 }

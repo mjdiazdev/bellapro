@@ -11,6 +11,7 @@ import CheckoutPage from './pages/Client/Checkout/CheckoutPage';
 import Products from './pages/Admin/Products/ProductsListPage';
 import Customers from './pages/Admin/Customers/CustomersListPage';
 import Orders from './pages/Admin/Orders/OrdersListPage';
+import DistributionCentersList from './pages/Admin/DistributionCenters/DistributionCentersPage';
 import Thanks from './pages/Client/Checkout/ThanksPage';
 
 function RequireAuth({children}) {
@@ -32,6 +33,7 @@ export default function App() {
           <Route path="/dashboard" element={<RequireAuth><Products/></RequireAuth>} />
           <Route path="/admin/categories" element={<RequireAuth><Categories/></RequireAuth>} />
           <Route path="/admin/shipping-methods" element={<RequireAuth><ShippingMethods/></RequireAuth>} />
+          <Route path="/admin/distribution-centers" element={<RequireAuth><DistributionCentersList/></RequireAuth>} />
           <Route path="/admin/users" element={<RequireAuth><Users/></RequireAuth>} />
           <Route path="/admin/products" element={<RequireAuth><Products/></RequireAuth>} />
           <Route path="/admin/customers" element={<RequireAuth><Customers/></RequireAuth>} />

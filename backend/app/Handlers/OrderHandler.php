@@ -59,6 +59,28 @@ class OrderHandler
             throw new ValidationException($validator);
         }
 
+        // ==========================================================
+        // PRE-VALIDACIÓN DE STOCK (Antes de iniciar transacción)
+        // ==========================================================
+        $errorsStock = [];
+        foreach ($data['items'] as $item) {
+            $product = $this->products->findById($item['product_id']);
+            if (!$product) {
+                throw new \Exception("Producto con ID {$item['product_id']} no encontrado.");
+            }
+
+            $stockDisponible = $product->stock ? $product->stock->stock : 0;
+
+            if ($item['quantity'] > $stockDisponible) {
+                $errorsStock[] = "El producto '{$product->name}' solo tiene {$stockDisponible} unidades disponibles (solicitaste {$item['quantity']}).";
+            }
+        }
+
+        if (!empty($errorsStock)) {
+            // Lanzamos excepción con los detalles de falta de stock
+            throw new \Exception(implode(" | ", $errorsStock));
+        }
+
         // Crear transacción de la base de datos para manejar los errores
         DB::beginTransaction();
 
@@ -125,11 +147,14 @@ class OrderHandler
 
             foreach ($data['items'] as $item) {
                 $product = $this->products->findById($item['product_id']);
-                if (!$product) {
-                    throw new \Exception('Producto no encontrado');
-                }
 
+                // 1. Acumular subtotal
                 $subtotal += $product->price * $item['quantity'];
+
+                // 2. DESCONTAR STOCK REAL
+                // Accedemos a la relación y restamos la cantidad
+                $nuevoStock = $product->stock->stock - $item['quantity'];
+                $product->stock()->update(['stock' => $nuevoStock]);
             }
 
             $shippingPrice = $shippingMethod->price;

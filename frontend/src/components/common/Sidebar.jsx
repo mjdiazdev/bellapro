@@ -1,20 +1,23 @@
 import React, { useState } from 'react';
 import { ReactComponent as Logo } from "../../assets/logo.svg";
-import { LayoutDashboard, Users, Briefcase, Package, ClipboardList, BarChart3, HelpCircle, Minimize2, Menu } from 'lucide-react';
+import { LayoutDashboard, Layers, ShoppingBag, Users, Briefcase, Truck, Package, ClipboardList, HelpCircle, Menu } from 'lucide-react';
 import { NavLink } from 'react-router-dom';
 
 const navigation = [
   { name: 'Dashboard', icon: LayoutDashboard, path: '/admin/products' },
-  { name: 'Usuarios', icon: Users, path: '/admin/users' },
+  { name: 'Categorías', icon: Layers, path: '/admin/categories' },
+  { name: 'Productos', icon: ShoppingBag, path: '/admin/products' },
   { name: 'Clientes', icon: Briefcase, path: '/admin/customers' },
-  { name: 'Centros de distribución', icon: Package, path: '/admin/shipping-methods' },
+  { name: 'Métodos de envío', icon: Truck, path: '/admin/shipping-methods' },
+  { name: 'Centros de distribución', icon: Package, path: '/admin/distribution-centers' },
   { name: 'Pedidos', icon: ClipboardList, path: '/admin/orders' },
-  { name: 'Estadísticas', icon: BarChart3, path: '/admin/stats' },
+  { name: 'Usuarios', icon: Users, path: '/admin/users' },
+  //{ name: 'Estadísticas', icon: BarChart3, path: '/admin/stats' },
 ];
 
 const bottomNavigation = [
   { name: 'Ayuda', icon: HelpCircle, path: '/help' },
-  { name: 'Ocultar navegación', icon: Minimize2, path: '/hide' },
+  //{ name: 'Ocultar navegación', icon: Minimize2, path: '/hide' },
 ];
 
 const NavItem = ({ item }) => {

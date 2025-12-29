@@ -3,39 +3,54 @@ import RadioCard from "../../common/variant/RadioCard";
 import { Truck, Bolt, Gift } from "lucide-react";
 import { getAll } from "../../../services/apiService";
 
-// Mapa de iconos
+/**
+ * Mapa de iconos basado en el nombre que viene de la base de datos.
+ */
 const iconMap = {
   "Envío Estándar": <Truck className="w-4 h-4 text-gray-500" />,
   "Envío Express": <Bolt className="w-4 h-4 text-gray-500" />,
   "Envío Gratuito": <Gift className="w-4 h-4 text-gray-500" />
 };
 
-const ShippingMethod = ({ selectedShipping, setSelectedShipping }) => {
+/**
+ * @param {number} selectedShipping - ID del método seleccionado.
+ * @param {function} setSelectedShipping - Función para actualizar el ID.
+ * @param {function} onMethodsLoaded - NUEVA PROP: Callback para enviar los métodos al padre (CheckoutPage).
+ */
+const ShippingMethod = ({ selectedShipping, setSelectedShipping, onMethodsLoaded }) => {
   const [methods, setMethods] = useState([]);
   const [loading, setLoading] = useState(false);
 
   useEffect(() => {
-  const loadShippingMethods = async () => {
-    setLoading(true);
-    try {
-      const res = await getAll("shippingMethods");
-      const methodsArray = Array.isArray(res) ? res : res.data || [];
-      setMethods(methodsArray);
+    const loadShippingMethods = async () => {
+      setLoading(true);
+      try {
+        const res = await getAll("shippingMethods");
+        const methodsArray = Array.isArray(res) ? res : res.data || [];
+        
+        setMethods(methodsArray);
 
-      if (!selectedShipping && methodsArray.length > 0) {
-        setSelectedShipping(methodsArray[0].id);
+        // --- IMPORTANTE: Notificamos al padre (CheckoutPage) los métodos cargados ---
+        // Esto permite que el Resumen de Orden sepa el precio de cada ID.
+        if (onMethodsLoaded) {
+          onMethodsLoaded(methodsArray);
+        }
+
+        // Selección por defecto: Si no hay nada seleccionado, tomamos el primero.
+        if (!selectedShipping && methodsArray.length > 0) {
+          setSelectedShipping(methodsArray[0].id);
+        }
+      } catch (error) {
+        console.error("Error loading shipping methods", error);
+        setMethods([]);
+      } finally {
+        setLoading(false);
       }
-    } catch (error) {
-      console.error("Error loading shipping methods", error);
-      setMethods([]); // fallback seguro
-    } finally {
-      setLoading(false);
-    }
-  };
-
+    };
 
     loadShippingMethods();
-  }, []);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []); // Solo se ejecuta al montar el componente
 
   return (
     <section>
@@ -43,26 +58,32 @@ const ShippingMethod = ({ selectedShipping, setSelectedShipping }) => {
         Método de envío
       </h2>
 
-      {loading && <p className="text-sm text-gray-500">Cargando métodos de envío...</p>}
+      {loading && (
+        <p className="text-sm text-gray-500 animate-pulse">
+          Cargando métodos de envío...
+        </p>
+      )}
 
       <div className="space-y-3">
-        {methods.length === 0 && !loading && (
-          <p className="text-sm text-gray-500">No hay métodos de envío disponibles</p>
+        {!loading && methods.length === 0 && (
+          <p className="text-sm text-gray-500 italic">
+            No hay métodos de envío disponibles en este momento.
+          </p>
         )}
 
-        {methods.map(method => (
+        {methods.map((method) => (
           <RadioCard
             key={method.id}
             title={method.name}
             subtitle={method.description}
-            price={`€${Number(method.price).toFixed(2)}`}
-            icon={iconMap[method.name] || null}
+            // Formateamos el precio para que siempre tenga 2 decimales
+            price={Number(method.price) === 0 ? "Gratis" : `€${Number(method.price).toFixed(2)}`}
+            icon={iconMap[method.name] || <Truck className="w-4 h-4 text-gray-500" />}
             value={method.id}
             selected={selectedShipping === method.id}
             onChange={() => setSelectedShipping(method.id)}
           />
         ))}
-
       </div>
     </section>
   );

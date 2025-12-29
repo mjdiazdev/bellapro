@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import { useState, useEffect } from "react";
 // 1. Importar useNavigate de react-router-dom
 import { useNavigate } from "react-router-dom"; 
 import CheckoutHeader from "../../../components/common/HeaderClient";
@@ -67,7 +67,7 @@ export default function CheckoutPage() {
     postal_code_id: ""
   });
 
-  const [selectedShipping, setSelectedShipping] = useState(1);
+  const [selectedShipping] = useState(1);
   const [selectedPayment, setSelectedPayment] = useState({
     method: "paypal",
     amount: productsInCart.reduce((sum, p) => sum + p.price * p.quantity, 0),
@@ -143,6 +143,32 @@ export default function CheckoutPage() {
     }
   };
 
+  const [shippingMethods, setShippingMethods] = useState([]); // Nuevo: Guardar la lista completa
+  const [selectedShippingId, setSelectedShippingId] = useState(null);
+
+  // Buscamos el objeto del método seleccionado para pasarlo al resumen
+  const currentShippingMethod = shippingMethods.find(m => m.id === selectedShippingId);
+
+  // Recalcular el monto para el payload de pago cada vez que cambie el envío o el carrito
+  useEffect(() => {
+    // 1. Calculamos el subtotal de productos
+    const subtotal = productsInCart.reduce((sum, p) => sum + p.price * p.quantity, 0);
+    
+    // 2. Obtenemos el precio del envío
+    const shipping = currentShippingMethod ? Number(currentShippingMethod.price) : 0;
+    
+    // 3. Calculamos base + IVA (21%)
+    const totalConIva = (subtotal + shipping) * 1.21;
+
+    // 4. Actualizamos el estado del pago
+    setSelectedPayment(prev => ({
+      ...prev,
+      amount: totalConIva.toFixed(2)
+    }));
+
+    // AGREGAMOS LAS DEPENDENCIAS AQUÍ:
+  }, [currentShippingMethod, productsInCart, setSelectedPayment]);
+
   return (
     <div className="min-h-screen bg-pink-50">
       <CheckoutHeader />
@@ -151,14 +177,11 @@ export default function CheckoutPage() {
         {/* LADO DERECHO: RESUMEN */}
         <div className="order-1 lg:order-2">
           <div className="lg:sticky lg:top-24">
-            <OrderSummary
-              products={productsInCart}
-              items={productsInCart.length}
-              subtotal={selectedPayment.amount}
-              total={selectedPayment.amount}
+            <OrderSummary 
+              selectedShippingMethod={currentShippingMethod} 
             />
-            <Button onClick={handlePlaceOrder} fullWidth>
-              Completar Pago
+            <Button onClick={handlePlaceOrder} fullWidth className="mt-4">
+              Completar Pago (€{selectedPayment.amount})
             </Button>
           </div>
         </div>
@@ -183,8 +206,9 @@ export default function CheckoutPage() {
           )}
 
           <ShippingMethod
-            selectedShipping={selectedShipping}
-            setSelectedShipping={setSelectedShipping}
+            selectedShipping={selectedShippingId}
+            setSelectedShipping={setSelectedShippingId}
+            onMethodsLoaded={setShippingMethods} // Nueva prop para capturar los métodos
           />
 
           <PaymentMethod

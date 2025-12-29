@@ -17,6 +17,7 @@ export const BASE_API_ROUTES = {
   paymentMethods: "/payment-methods",
   orders: "/orders",
   orderItems: "/order-items",
+  distributionCenters: "/distribution-centers"
 };
 
 /**
@@ -83,5 +84,11 @@ export const getQrData = async (code) => {
  */
 export const logout = async () => {
   const res = await api.post("/logout");
+  return res.data;
+};
+
+export const bulkUpdateItems = async (resource, data) => {
+  const route = getRoute(resource);
+  const res = await api.post(`${route}/bulk-update`, data);
   return res.data;
 };

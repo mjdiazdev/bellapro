@@ -118,7 +118,7 @@ export default function ShippingMethodsPage() {
           <div className="container mx-auto p-6 bg-white rounded-xl shadow-lg">
 
             <h1 className="text-2xl font-bold text-gray-800 mb-6">
-              Centro de distribución - Métodos de envío
+              Métodos de envío
             </h1>
 
             <div className="flex justify-end mb-6">
@@ -127,11 +127,14 @@ export default function ShippingMethodsPage() {
               </Button>
             </div>
 
-            <ShippingMethodsList
-              shippingMethods={Array.isArray(items?.data) ? items.data : []}
-              onEdit={handleEdit}
-              onDelete={handleDeleteClick}
-            />
+            {/* Tabla con scroll horizontal en móviles */}
+            <div className="overflow-x-auto">
+              <ShippingMethodsList
+                shippingMethods={Array.isArray(items?.data) ? items.data : []}
+                onEdit={handleEdit}
+                onDelete={handleDeleteClick}
+              />
+            </div>            
           </div>
         </main>
       </div>

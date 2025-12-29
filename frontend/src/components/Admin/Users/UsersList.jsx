@@ -1,49 +1,42 @@
-/**
- * Componente visual de listado de usuarios
- * Solo UI – no contiene lógica del backend.
- */
+import AdminTable from "../../common/AdminTable";
 
 export default function UsersList({ users, onEdit, onDelete }) {
+  
+  // 1. Definimos las columnas
+  const columns = [
+    { 
+      header: 'Nombre', 
+      key: 'name' 
+    },
+    { 
+      header: 'Email', 
+      key: 'email' 
+    },
+    { 
+      header: 'Rol', 
+      key: 'role',
+      // Transformamos el ID del rol en un texto amigable o una etiqueta
+      render: (u) => (
+        <span className={`px-2 py-1 rounded-md text-xs font-bold ${
+          u.role === 1 
+            ? "bg-purple-900/30  border border-purple-500/50" 
+            : "bg-blue-900/30  border border-blue-500/50"
+        }`}>
+          {u.role === 1 ? "Administrador" : "Usuario"}
+        </span>
+      )
+    },
+  ];
+
   return (
-    <div className="p-6 rounded-lg">
-
-      <table className="w-full text-left rounded-lg overflow-hidden">
-        <thead className="bg-gray-700 text-gray-50">
-          <tr>
-            <th className="p-3">Nombre</th>
-            <th className="p-3">Email</th>
-            <th className="p-3">Rol</th>
-            <th className="p-3">Acciones</th>
-          </tr>
-        </thead>
-
-        <tbody>
-          {users.map((u) => (
-            <tr key={u.id} className="border-b border-gray-200">
-              <td className="p-3">{u.name}</td>
-              <td className="p-3">{u.email}</td>
-              <td className="p-3">{u.role === 1 ? "Administrador" : "Usuario"}</td>
-
-              <td className="p-3 flex gap-3">
-                <button
-                  className="text-pink font-medium"
-                  onClick={() => onEdit(u.id)}
-                >
-                  Editar
-                </button>
-
-                <button
-                  className="text-red-400 font-medium"
-                  onClick={() => onDelete(u.id)}
-                >
-                  Eliminar
-                </button>
-              </td>
-
-            </tr>
-          ))}
-        </tbody>
-      </table>
+    <div className="p-6">      
+      {/* 2. Llamamos al componente genérico */}
+      <AdminTable 
+        columns={columns}
+        data={users}
+        onEdit={onEdit}
+        onDelete={onDelete}
+      />
     </div>
   );
 }

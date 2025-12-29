@@ -37,7 +37,6 @@ class CategoryHandler
         );
         $writer = new Writer($renderer);
 
-        // ⚡ Cambiar URL del QR al frontend
         $frontendUrl = env('FRONTEND_URL', 'http://localhost:3000');
         $qrContent = $frontendUrl . '/store?qr=' . $category->code;
 

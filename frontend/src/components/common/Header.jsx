@@ -96,7 +96,7 @@ export default function Header() {
         {openMenu && (
           <div className="absolute right-0 top-12 w-48 bg-white rounded-lg shadow-lg border z-50">
             
-            {/* Ver perfil */}
+            {/* Ver perfil 
             <button
               onClick={() => {
                 setOpenMenu(false);
@@ -108,7 +108,7 @@ export default function Header() {
             </button>
 
             <hr />
-
+            */}
             {/* Cerrar sesión */}
             <button
               onClick={handleLogout}

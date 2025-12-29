@@ -1,6 +1,7 @@
 <?php
 namespace App\Handlers;
 
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Validator;
 use App\Repositories\ProductRepository;
 use App\Repositories\CategoryRepository;
@@ -17,26 +18,32 @@ class ProductHandler
      */
     public function create(array $data)
     {
-        // Validaciones completas
         $validator = Validator::make($data, [
             'name'        => 'required|string|max:255',
             'reference'   => 'nullable|string|max:100|unique:products,reference',
             'price'       => 'required|numeric|min:0',
-            'description' => 'nullable|string',
-            'photo_url'   => 'nullable|url',
-            'category_id' => 'required|integer|exists:categories,id'
+            'category_id' => 'required|integer|exists:categories,id',
+            // Validamos el stock si viene en el formulario
+            'stock'       => 'nullable|integer|min:0'
         ]);
 
         if ($validator->fails()) {
             throw new \Exception($validator->errors()->first());
         }
 
-        // Verificar existencia de categoría (extra por seguridad)
-        if (!$this->categories->findById($data['category_id'])) {
-            throw new \Exception('Categoría no encontrada');
-        }
+        // Usamos una transacción para asegurar integridad
+        return DB::transaction(function () use ($data) {
+            // 1. Crear el producto
+            $product = $this->products->create($data);
 
-        return $this->products->create($data);
+            // 2. Crear el registro de stock inicial (usamos el valor enviado o 0)
+            $product->stock()->create([
+                'stock' => $data['stock'] ?? 0,
+                'min_stock' => $data['min_stock'] ?? 1,
+            ]);
+
+            return $product->load('stock'); // Retornamos el producto con su stock
+        });
     }
 
     /**
@@ -52,26 +59,96 @@ class ProductHandler
      */
     public function update(int $id, array $data)
     {
-        // Validaciones dependiendo de los campos enviados
+        // 1. Validaciones (Agregamos stock y min_stock como opcionales)
         $validator = Validator::make($data, [
             'name'        => 'sometimes|string|max:255',
             'reference'   => "sometimes|string|max:100|unique:products,reference,$id",
             'price'       => 'sometimes|numeric|min:0',
             'description' => 'sometimes|string',
             'photo_url'   => 'sometimes|url',
-            'category_id' => 'sometimes|integer|exists:categories,id'
+            'category_id' => 'sometimes|integer|exists:categories,id',
+            'stock'       => 'sometimes|integer|min:0',
+            'min_stock'   => 'sometimes|integer|min:0'
         ]);
 
         if ($validator->fails()) {
             throw new \Exception($validator->errors()->first());
         }
 
-        // Validar categoría si viene en request
+        // 2. Validar categoría si viene en el request
         if (isset($data['category_id']) && !$this->categories->findById($data['category_id'])) {
             throw new \Exception('Categoría no encontrada');
         }
 
-        return $this->products->update($id, $data);
+        // 3. Proceso de actualización mediante Transacción
+        return DB::transaction(function () use ($id, $data) {
+            // Actualizar datos básicos del producto en el repositorio
+            $product = $this->products->update($id, $data);
+
+            if (!$product) {
+                throw new \Exception('Producto no encontrado');
+            }
+
+            // 4. Actualizar el Stock si los campos están presentes
+            // Usamos updateOrCreate por si acaso un producto antiguo no tuviera registro de stock
+            if (isset($data['stock']) || isset($data['min_stock'])) {
+                $product->stock()->updateOrCreate(
+                    ['product_id' => $product->id],
+                    array_filter([
+                        'stock'     => $data['stock'] ?? null,
+                        'min_stock' => $data['min_stock'] ?? null,
+                    ], fn($value) => !is_null($value))
+                );
+            }
+
+            return $product->load(['category', 'stock']);
+        });
+    }
+
+    /**
+     * Actualización masiva de productos (Precio y Stock).
+     * * @param array $items
+     * @return int Cantidad de productos procesados
+     * @throws \Exception
+     */
+    public function bulkUpdate(array $items)
+    {
+        if (empty($items)) {
+            throw new \Exception("No hay datos para actualizar.");
+        }
+
+        // 1. Validar la estructura general del array
+        $validator = Validator::make(['items' => $items], [
+            'items' => 'required|array',
+            'items.*.id' => 'required|integer|exists:products,id',
+            'items.*.price' => 'required|numeric|min:0',
+            'items.*.stock' => 'required|integer|min:0',
+        ]);
+
+        if ($validator->fails()) {
+            throw new \Exception($validator->errors()->first());
+        }
+
+        // 2. Ejecutar la operación atómica
+        return DB::transaction(function () use ($items) {
+            foreach ($items as $item) {
+                // Actualizamos el precio en la tabla products
+                $this->products->update($item['id'], [
+                    'price' => $item['price']
+                ]);
+
+                // Actualizamos la cantidad en la tabla product_stocks
+                // Buscamos el producto para acceder a su relación
+                $product = $this->products->findById($item['id']);
+                if ($product) {
+                    $product->stock()->update([
+                        'stock' => $item['stock']
+                    ]);
+                }
+            }
+
+            return count($items);
+        });
     }
 
     /**

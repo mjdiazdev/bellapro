@@ -21,7 +21,8 @@ class ProductRepository
      */
     public function findById(int $id): ?Product
     {
-        return Product::with('category')->find($id);
+        // Agregamos 'stock' para que el modal de detalles en React tenga la info
+        return Product::with(['category', 'stock'])->find($id);
     }
 
     /**
@@ -60,6 +61,6 @@ class ProductRepository
      */
     public function all(): array
     {
-        return Product::with('category')->get()->toArray();
+        return Product::with('category', 'stock')->get()->toArray();
     }
 }

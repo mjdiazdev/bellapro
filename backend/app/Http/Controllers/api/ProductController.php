@@ -85,6 +85,31 @@ class ProductController extends Controller
     }
 
     /**
+     * Actualización masiva de precios y stock.
+     *
+     * @param Request $request
+     * @param ProductHandler $handler
+     * @return \Illuminate\Http\JsonResponse
+     */
+    public function bulkUpdate(Request $request, ProductHandler $handler)
+    {
+        try {
+            // Pasamos el array 'items' que vendrá del frontend al handler
+            $result = $handler->bulkUpdate($request->input('items', []));
+
+            return response()->json([
+                'message' => 'Productos actualizados masivamente con éxito',
+                'count' => $result
+            ]);
+
+        } catch (\Exception $e) {
+            return response()->json([
+                'message' => $e->getMessage()
+            ], 422);
+        }
+    }
+
+    /**
      * Eliminar un producto por ID.
      *
      * @param ProductHandler $handler

@@ -11,6 +11,7 @@ use App\Http\Controllers\Api\CityController;
 use App\Http\Controllers\Api\PostalCodeController;
 use App\Http\Controllers\Api\CustomerController;
 use App\Http\Controllers\Api\OrderController;
+use App\Http\Controllers\Api\DistributionCenterController;
 
 /*
 |--------------------------------------------------------------------------
@@ -75,6 +76,16 @@ Route::middleware(['auth:sanctum', 'role:admin'])->group(function () {
     Route::get('/products/{id}', [ProductController::class,'show']);
     Route::put('/products/{id}', [ProductController::class,'update']);
     Route::delete('/products/{id}', [ProductController::class,'destroy']);
+    Route::post('/products/bulk-update', [ProductController::class, 'bulkUpdate']);
+
+    /**
+     * Rutas para la gestión de centros de distribución.
+     */
+    Route::get('/distribution-centers', [DistributionCenterController::class, 'list']);
+    Route::post('/distribution-centers', [DistributionCenterController::class, 'create']);
+    Route::get('/distribution-centers/{id}', [DistributionCenterController::class, 'show']);
+    Route::put('/distribution-centers/{id}', [DistributionCenterController::class, 'update']);
+    Route::delete('/distribution-centers/{id}', [DistributionCenterController::class, 'destroy']);
 
     /**
      * Rutas para la gestión de métodos de envío.
