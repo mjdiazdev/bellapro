@@ -3,7 +3,7 @@ import { ReactComponent as Logo } from "../../assets/logo.svg";
 import { QrCode, ShoppingCart, Menu } from "lucide-react";
 import QRScanModal from "./QRScanModal";
 import CartDrawer from "../Client/Store/CartDrawer";
-import { useCart } from "../../context/CartContext"; // 👈 usamos el contexto
+import { useCart } from "../../context/CartContext";
 
 export default function Header() {
   const [openQR, setOpenQR] = useState(false);
@@ -11,6 +11,9 @@ export default function Header() {
 
   // CartContext
   const { cartProducts, addToCart, removeFromCart } = useCart();
+
+  // CALCULAMOS EL TOTAL DE ARTÍCULOS
+  const totalItems = cartProducts.reduce((sum, p) => sum + p.quantity, 0);
 
   return (
     <>
@@ -32,14 +35,25 @@ export default function Header() {
               </span>
             </button>
 
-            <button onClick={() => setOpenCart(true)}>
+            {/* BOTÓN CARRITO CON CONTADOR */}
+            <button 
+              onClick={() => setOpenCart(true)} 
+              className="relative p-2 hover:bg-gray-100 rounded-full transition-colors"
+            >
               <ShoppingCart className="h-6 w-6 text-gray-600" />
+              
+              {totalItems > 0 && (
+                <span className="absolute top-0 right-0 bg-pink text-white text-[10px] font-bold h-5 w-5 flex items-center justify-center rounded-full border-2 border-white transform translate-x-1 -translate-y-1">
+                  {totalItems > 99 ? '99+' : totalItems}
+                </span>
+              )}
             </button>
 
-            <Menu className="h-6 w-6 text-gray-600" />
+            <Menu className="h-6 w-6 text-gray-600 cursor-pointer" />
           </div>
         </div>
       </header>
+      
       <QRScanModal open={openQR} onClose={() => setOpenQR(false)} />
 
       <CartDrawer
