@@ -12,6 +12,7 @@ export default function StorePage() {
   const [catalogProducts, setCatalogProducts] = useState([]); // productos de la categoría actual
   const [category, setCategory] = useState(null);
   const [loading, setLoading] = useState(false);
+  const [searchTerm, setSearchTerm] = useState("");
 
   const [searchParams] = useSearchParams();
   const qrCode = searchParams.get("qr");
@@ -51,6 +52,24 @@ export default function StorePage() {
     loadProducts();
   }, [qrCode]);
 
+  // Lógica para buscar y hacer scroll (Efecto tipo Ctrl+F)
+  useEffect(() => {
+    if (searchTerm.trim() === "") return;
+
+    // En tu useEffect de búsqueda dentro de StorePage.jsx
+    const foundProduct = catalogProducts.find(p => 
+      p.name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      (p.reference && p.reference.toLowerCase().includes(searchTerm.toLowerCase()))
+    );
+
+    if (foundProduct) {
+      const element = document.getElementById(`product-${foundProduct.id}`);
+      if (element) {
+        element.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      }
+    }
+  }, [searchTerm, catalogProducts]);
+
   // Totales basados en el carrito
   const items = cartProducts.reduce((sum, p) => sum + p.quantity, 0);
   const subtotal = cartProducts.reduce((sum, p) => sum + p.price * p.quantity, 0);
@@ -70,6 +89,8 @@ export default function StorePage() {
             <input
               type="text"
               placeholder="Buscar producto"
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)} // Actualizamos el estado
               className="w-full h-10 pl-11 pr-4 rounded-full border border-gray-200 text-sm placeholder-gray-400 focus:outline-none focus:border-pink"
             />
           </div>
@@ -79,25 +100,36 @@ export default function StorePage() {
 
             {/* CATALOGO */}
             <div className="space-y-4">
-              {loading && <p className="text-center text-gray-500">Cargando productos...</p>}
+              {/* Agregamos el uso de loading aquí */}
+              {loading ? (
+                <p className="text-center text-gray-500 animate-pulse py-10">Cargando productos...</p>
+              ) : (
+                <>
+                  {category && <h2 className="text-xl font-bold text-gray-800 mb-4">{category.name}</h2>}
 
-              {category && <h2 className="text-xl font-bold text-gray-800 mb-4">{category.name}</h2>}
+                  {catalogProducts.map(product => {
+                    const cartProduct = cartProducts.find(p => p.id === product.id);
+                    const isMatch = searchTerm !== "" && (
+                      product.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                      product.reference.toLowerCase().includes(searchTerm.toLowerCase())
+                    );
 
-              {catalogProducts.map(product => {
-                const cartProduct = cartProducts.find(p => p.id === product.id);
-
-                return (
-                  <ProductItem
-                    key={product.id}
-                    product={{
-                      ...product,
-                      quantity: cartProduct?.quantity || 0
-                    }}
-                    onAdd={() => addToCart(product)}
-                    onRemove={() => removeFromCart(product.id)}
-                  />
-                );
-              })}
+                    return (
+                      <ProductItem
+                        key={product.id}
+                        id={`product-${product.id}`}
+                        isMatch={isMatch}
+                        product={{
+                          ...product,
+                          quantity: cartProduct?.quantity || 0
+                        }}
+                        onAdd={() => addToCart(product)}
+                        onRemove={() => removeFromCart(product.id)}
+                      />
+                    );
+                  })}
+                </>
+              )}
             </div>
 
             {/* CARRITO */}
