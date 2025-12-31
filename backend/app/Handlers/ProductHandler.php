@@ -1,6 +1,7 @@
 <?php
 namespace App\Handlers;
 
+use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Validator;
 use App\Repositories\ProductRepository;
@@ -23,26 +24,34 @@ class ProductHandler
             'reference'   => 'nullable|string|max:100|unique:products,reference',
             'price'       => 'required|numeric|min:0',
             'category_id' => 'required|integer|exists:categories,id',
-            // Validamos el stock si viene en el formulario
-            'stock'       => 'nullable|integer|min:0'
+            'stock'       => 'nullable|integer|min:0',
+            'image'       => 'nullable|image|mimes:jpg,jpeg,png|max:2048'
         ]);
 
         if ($validator->fails()) {
             throw new \Exception($validator->errors()->first());
         }
 
-        // Usamos una transacción para asegurar integridad
         return DB::transaction(function () use ($data) {
-            // 1. Crear el producto
+            // Manejo del archivo
+            if (isset($data['image']) && $data['image'] instanceof \Illuminate\Http\UploadedFile) {
+                // Esto guardará el archivo en: storage/app/public/products
+                $path = $data['image']->store('products', 'public');
+
+                // Guardamos esa ruta en el campo 'photo_url' o 'image' de tu DB
+                $data['photo_url'] = $path;
+            }
+
+            // Crear el producto con la ruta del archivo ya seteada
             $product = $this->products->create($data);
 
-            // 2. Crear el registro de stock inicial (usamos el valor enviado o 0)
+            // Crear stock inicial
             $product->stock()->create([
                 'stock' => $data['stock'] ?? 0,
                 'min_stock' => $data['min_stock'] ?? 1,
             ]);
 
-            return $product->load('stock'); // Retornamos el producto con su stock
+            return $product->load('stock');
         });
     }
 
@@ -59,38 +68,49 @@ class ProductHandler
      */
     public function update(int $id, array $data)
     {
-        // 1. Validaciones (Agregamos stock y min_stock como opcionales)
+        // 1. Validaciones
         $validator = Validator::make($data, [
             'name'        => 'sometimes|string|max:255',
             'reference'   => "sometimes|string|max:100|unique:products,reference,$id",
             'price'       => 'sometimes|numeric|min:0',
-            'description' => 'sometimes|string',
-            'photo_url'   => 'sometimes|url',
+            'description' => 'sometimes|string|nullable',
             'category_id' => 'sometimes|integer|exists:categories,id',
             'stock'       => 'sometimes|integer|min:0',
-            'min_stock'   => 'sometimes|integer|min:0'
+            'min_stock'   => 'sometimes|integer|min:0',
+            'image'       => 'sometimes|image|mimes:jpg,jpeg,png|max:2048'
         ]);
 
         if ($validator->fails()) {
             throw new \Exception($validator->errors()->first());
         }
 
-        // 2. Validar categoría si viene en el request
-        if (isset($data['category_id']) && !$this->categories->findById($data['category_id'])) {
-            throw new \Exception('Categoría no encontrada');
-        }
-
-        // 3. Proceso de actualización mediante Transacción
+        // 2. Proceso de actualización mediante Transacción
         return DB::transaction(function () use ($id, $data) {
-            // Actualizar datos básicos del producto en el repositorio
-            $product = $this->products->update($id, $data);
+            // Buscamos el producto actual para tener acceso a la ruta de la imagen anterior
+            $product = $this->products->findById($id);
 
             if (!$product) {
                 throw new \Exception('Producto no encontrado');
             }
 
-            // 4. Actualizar el Stock si los campos están presentes
-            // Usamos updateOrCreate por si acaso un producto antiguo no tuviera registro de stock
+            // 3. Manejo de la Nueva Imagen
+            if (isset($data['image']) && $data['image'] instanceof \Illuminate\Http\UploadedFile) {
+                // Eliminar la imagen anterior del disco 'public' si existe
+                if ($product->photo_url) {
+                    Storage::disk('public')->delete($product->photo_url);
+                }
+
+                // Guardar la nueva imagen
+                $path = $data['image']->store('products', 'public');
+
+                // Actualizamos el campo con la nueva ruta relativa
+                $data['photo_url'] = $path;
+            }
+
+            // 4. Actualizar datos básicos del producto
+            $product = $this->products->update($id, $data);
+
+            // 5. Actualizar el Stock
             if (isset($data['stock']) || isset($data['min_stock'])) {
                 $product->stock()->updateOrCreate(
                     ['product_id' => $product->id],

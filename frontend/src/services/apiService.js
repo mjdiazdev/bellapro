@@ -49,16 +49,26 @@ export const getById = async (resource, id) => {
   return res.data;
 };
 
-// Crear registro
+// Crear registro - Soporta JSON o FormData
 export const createItem = async (resource, data) => {
   const route = getRoute(resource);
   const res = await api.post(route, data);
   return res.data;
 };
 
-// Actualizar registro
+// Actualizar registro - Importante para Laravel y archivos
 export const updateItem = async (resource, id, data) => {
   const route = getRoute(resource);
+  
+  // Si la data es FormData (contiene archivos), Laravel exige enviar por POST 
+  // con el campo _method="PUT"
+  if (data instanceof FormData) {
+    data.append("_method", "PUT");
+    const res = await api.post(`${route}/${id}`, data);
+    return res.data;
+  }
+
+  // Si es JSON normal, sigue usando PUT
   const res = await api.put(`${route}/${id}`, data);
   return res.data;
 };

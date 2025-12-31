@@ -44,7 +44,15 @@ export default function ProductsListPage() {
 
   // Hook de Formulario (para crear/editar registro individual)
   const { data: formData, update: updateForm, setData: setFormData, reset: resetForm } =
-    useForm({ name: "", reference: "", price: "", description: "", category_id: "", photo_url: "", stock: 0 });
+  useForm({ 
+    name: "", 
+    reference: "", 
+    price: "", 
+    description: "", 
+    category_id: "", 
+    stock: 0,
+    image_file: null 
+  });
 
   const [formMode, setFormMode] = useState("create");
   const [idToDelete, setIdToDelete] = useState(null); 
@@ -126,20 +134,37 @@ export default function ProductsListPage() {
 
   const handleSubmit = async () => {
     try {
+      // 1. Crear el contenedor FormData
+      const payload = new FormData();
+      
+      // 2. Llenar con los campos del formulario
+      payload.append("name", formData.name);
+      payload.append("reference", formData.reference);
+      payload.append("price", formData.price);
+      payload.append("description", formData.description || "");
+      payload.append("category_id", formData.category_id);
+      payload.append("stock", formData.stock);
+
+      // 3. Agregar la imagen solo si el usuario seleccionó una nueva
+      if (formData.image_file) {
+        payload.append("image", formData.image_file);
+      }
+
       let res;
       if (formMode === "create") {
-        res = await create(formData);
+        res = await create(payload); // useCrud llamará a apiService.createItem
       } else {
-        res = await update(formData.id, formData);
+        res = await update(formData.id, payload); // useCrud llamará a apiService.updateItem
       }
+
       setAlertType("success");
       setAlertMessage(res.message);
       loadData();
+      formModal.hide();
     } catch (error) {
       setAlertType("error");
-      setAlertMessage(error.response?.data?.message);
+      setAlertMessage(error.response?.data?.message || "Error al procesar la solicitud");
     }
-    formModal.hide();
     alertModal.show();
   };
 
@@ -215,7 +240,19 @@ export default function ProductsListPage() {
           </div>
 
           <textarea value={formData.description} placeholder="Descripción" className="border border-gray-300 rounded-lg p-3 focus:ring-pink focus:border-pink" onChange={e => updateForm("description", e.target.value)} />
-          <input type="text" value={formData.photo_url} placeholder="URL de la foto" className="border border-gray-300 rounded-lg p-3 focus:ring-pink focus:border-pink" onChange={e => updateForm("photo_url", e.target.value)} />
+          <div className="flex flex-col space-y-2">
+            <label className="text-sm font-medium text-gray-700">Imagen del Producto</label>
+            <input 
+              type="file" 
+              accept="image/*"
+              className="border border-gray-300 rounded-lg p-2 text-sm"
+              onChange={e => updateForm("image_file", e.target.files[0])} // Guardamos el archivo
+            />
+            {/* Previsualización */}
+            {formData.image_file && (
+              <p className="text-xs text-pink font-medium">Archivo seleccionado: {formData.image_file.name}</p>
+            )}
+          </div>
           
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-1">Categoría</label>

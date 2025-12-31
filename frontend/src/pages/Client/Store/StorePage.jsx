@@ -31,13 +31,13 @@ export default function StorePage() {
         const res = await getQrData(qrCode);
         setCategory(res.data.category);
 
-        const newCatalog = res.data.products.map(p => ({
-          id: p.id,
-          name: p.name,
-          reference: p.reference,
-          price: Number(p.price),
-          image: p.photo_url || "https://via.placeholder.com/100"
-        }));
+      const newCatalog = res.data.products.map(p => ({
+        id: p.id,
+        name: p.name,
+        reference: p.reference,
+        price: Number(p.price),
+        image: p.full_photo_url || "https://via.placeholder.com/100",
+      }));
 
         // Solo cargamos el catálogo de la categoría actual
         setCatalogProducts(newCatalog);
