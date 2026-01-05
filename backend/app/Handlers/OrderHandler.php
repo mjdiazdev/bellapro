@@ -4,6 +4,7 @@ namespace App\Handlers;
 
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Validator;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Validation\ValidationException;
 use App\Services\PayPalService;
 use App\Services\MailService;
@@ -43,13 +44,10 @@ class OrderHandler
         $validator = Validator::make($data, [
             'customer' => 'required|array',
             'customer.email' => 'required|email',
-
             'delivery' => 'required|array',
             'delivery.postal_code' => 'required|string',
-
             'shipping_method_id' => 'required|integer',
             'items' => 'required|array|min:1',
-
             'payment' => 'required|array',
             'payment.method' => 'required|string',
             'payment.amount' => 'required|numeric|min:0'
@@ -62,26 +60,13 @@ class OrderHandler
         // ==========================================================
         // PRE-VALIDACIÓN DE STOCK (Antes de iniciar transacción)
         // ==========================================================
-        $errorsStock = [];
         foreach ($data['items'] as $item) {
             $product = $this->products->findById($item['product_id']);
-            if (!$product) {
-                throw new \Exception("Producto con ID {$item['product_id']} no encontrado.");
-            }
-
-            $stockDisponible = $product->stock ? $product->stock->stock : 0;
-
-            if ($item['quantity'] > $stockDisponible) {
-                $errorsStock[] = "El producto '{$product->name}' solo tiene {$stockDisponible} unidades disponibles (solicitaste {$item['quantity']}).";
+            if (!$product || ($item['quantity'] > ($product->stock->stock ?? 0))) {
+                throw new \Exception("Stock insuficiente para el producto: " . ($product->name ?? 'ID '.$item['product_id']));
             }
         }
 
-        if (!empty($errorsStock)) {
-            // Lanzamos excepción con los detalles de falta de stock
-            throw new \Exception(implode(" | ", $errorsStock));
-        }
-
-        // Crear transacción de la base de datos para manejar los errores
         DB::beginTransaction();
 
         try {
@@ -131,7 +116,6 @@ class OrderHandler
             if (!$shippingMethod) {
                 throw new \Exception('Método de envío no válido');
             }
-
             // =======================
             // DIRECCIÓN DE ENVÍO
             // =======================
@@ -144,10 +128,8 @@ class OrderHandler
             // CALCULAR TOTALES
             // =======================
             $subtotal = 0;
-
             foreach ($data['items'] as $item) {
                 $product = $this->products->findById($item['product_id']);
-
                 // 1. Acumular subtotal
                 $subtotal += $product->price * $item['quantity'];
 
@@ -157,151 +139,75 @@ class OrderHandler
                 $product->stock()->update(['stock' => $nuevoStock]);
             }
 
+            // --- LÓGICA DE IVA 21% ---
             $shippingPrice = $shippingMethod->price;
-            $total = $subtotal + $shippingPrice;
+            $ivaPorcentaje = 0.21;
+
+            // Calculamos el IVA sobre (Subtotal + Envío)
+            $taxAmount = ($subtotal + $shippingPrice) * $ivaPorcentaje;
+
+            // El total final que guardamos y cobramos
+            $totalFinal = $subtotal + $shippingPrice + $taxAmount;
 
             // =======================
             // CREAR ORDEN
             // =======================
             $order = $this->orders->create([
                 'customer_id' => $customer->id,
-
                 'delivery_email' => $customerData['email'],
                 'delivery_name' => $data['delivery']['name'],
                 'delivery_nif' => $data['delivery']['nif'],
                 'delivery_phone' => $data['delivery']['phone'],
                 'delivery_address' => $data['delivery']['address'],
-                'delivery_address_extra' => $data['delivery']['address_extra'] ?? null,
                 'delivery_postal_code_id' => $deliveryPostal->id,
-
                 'shipping_method_id' => $shippingMethod->id,
-
                 'subtotal' => $subtotal,
                 'shipping_price' => $shippingPrice,
-                'total' => $total,
+                'total' => $totalFinal, // Total con IVA incluido
                 'status' => 'pending'
             ]);
 
-            // =======================
-            // ITEMS DE LA ORDEN
-            // =======================
+            // 6. CREAR ITEMS Y PAGO PENDIENTE
             foreach ($data['items'] as $item) {
                 $product = $this->products->findById($item['product_id']);
-
                 $this->orderItems->create([
-                    'order_id' => $order->id,
-                    'product_id' => $product->id,
-                    'quantity' => $item['quantity'],
-                    'unit_price' => $product->price,
+                    'order_id'    => $order->id,
+                    'product_id'  => $product->id,
+                    'quantity'    => $item['quantity'],
+                    'unit_price'  => $product->price,
                     'total_price' => $product->price * $item['quantity']
                 ]);
             }
 
-
-            // =======================
-            // REGISTRAR PAGO
-            // =======================
             $this->payments->create([
                 'order_id' => $order->id,
-                'method' => $data['payment']['method'],
-                'details' => $data['payment']['details'] ?? [],
-                'amount' => $data['payment']['amount'],
-                'status' => 'pending'
+                'method'   => $data['payment']['method'],
+                'amount'   => $totalFinal, // Cobramos el total con IVA
+                'status'   => 'pending'
             ]);
 
-
-            // Crear transacción de la base de datos
             DB::commit();
 
-            // =======================
-            // EN CASO DE PAYPAL
-            // =======================
+            // 7. LÓGICA DE PAYPAL
             if ($data['payment']['method'] === 'paypal') {
                 $paypalService = new PayPalService();
-                $paypalOrder = $paypalService->createOrder($total);
-                $this->payments->updateStatus(
-                    $order->id,
-                    'pending',
-                    ['paypal_order_id' => $paypalOrder['id']]
-                );
-            }
+                // Enviamos el totalFinal (con IVA) a PayPal
+                $paypalOrder = $paypalService->createOrder($totalFinal);
 
-            // =======================
-            // ENVIAR CORREO AL CLIENTE
-            // =======================
-            $mailService = new MailService();
+                $this->payments->updateStatus($order->id, 'pending', ['paypal_order_id' => $paypalOrder['id']]);
 
-            // Preparamos items de la orden para el correo
-            $orderItemsData = [];
-            foreach ($data['items'] as $item) {
-                $product = $this->products->findById($item['product_id']);
-                $orderItemsData[] = [
-                    'product_name' => $product->name,
-                    'quantity' => $item['quantity'],
-                    'unit_price' => $product->price
+                return [
+                    'order_id' => $order->id,
+                    'paypal' => [
+                        'id' => $paypalOrder['id'],
+                        'approve_url' => collect($paypalOrder['links'])->firstWhere('rel', 'approve')['href']
+                    ]
                 ];
             }
 
-            // =======================
-            // CÁLCULO DE IVA
-            // =======================
-
-            // Base imponible: subtotal + envío
-            $baseImponible = $subtotal + $shippingPrice;
-
-            // IVA 21%
-            $iva = $baseImponible * 0.21;
-
-            // Total final con IVA
-            $totalConIva = $baseImponible + $iva;
-
-
-            // =======================
-            // PREPARAR DATOS PARA CORREO
-            // =======================
-            $orderForMail = [
-                'order_number' => $order->id,
-                'customer_id' => $customer->id,
-                'customer_name' => $order->delivery_name,
-                'purchase_date' => now()->format('d/m/Y'),
-
-                'delivery_email' => $order->delivery_email,
-
-                'subtotal' => $subtotal,
-
-                'shipping' => [
-                    'method_name' => $shippingMethod->name,
-                    'price' => $shippingPrice
-                ],
-
-                'iva_percentage' => 21,
-                'iva_amount' => $iva,
-
-                'total_without_iva' => $baseImponible,
-                'total_with_iva' => $totalConIva,
-
-                'items' => $orderItemsData
-            ];
-
-
-
-            $mailService->sendPurchaseMail($order->delivery_email, $orderForMail);
-
-            // =======================
-            // RETORNAR RESPUESTA JSON
-            // =======================
-
-            return [
-                'order' => $this->orders->findById($order->id),
-                'paypal' => [
-                    'id' => $paypalOrder['id'],
-                    'approve_url' => collect($paypalOrder['links'])
-                        ->firstWhere('rel', 'approve')['href']
-                ]
-            ];
+            return ['order' => $order];
 
         } catch (\Exception $e) {
-            // Rollback de la transacción de la base de datos
             DB::rollBack();
             throw $e;
         }
@@ -312,20 +218,30 @@ class OrderHandler
      */
     public function capturePaypalPayment(int $orderId, string $paypalOrderId)
     {
+        Log::info("Iniciando captura PayPal. Order: $orderId, Token: $paypalOrderId");
         $order = $this->orders->findById($orderId);
-        if (!$order) {
-            throw new \Exception('Orden no encontrada');
-        }
+        if (!$order) throw new \Exception('Orden no encontrada');
 
         $paypal = new PayPalService();
         $capture = $paypal->captureOrder($paypalOrderId);
 
-        if ($capture['status'] !== 'COMPLETED') {
-            throw new \Exception('Pago no completado');
+        if (($capture['status'] ?? '') !== 'COMPLETED') {
+            throw new \Exception('PayPal devolvió estado: ' . ($capture['status'] ?? 'NULL') . '. Respuesta completa: ' . json_encode($capture));
         }
 
+        // 1. Actualizar estados
         $this->payments->updateStatus($orderId, 'completed', $capture);
-        $order->update(['status' => 'paid']);
+        $order->update(['status' => 'completed']);
+
+        // 2. Enviar correo
+        try {
+            $mailService = new MailService();
+            $mailData = $this->prepareOrderMailData($order);
+            $mailService->sendPurchaseMail($order->delivery_email, $mailData);
+        } catch (\Exception $e) {
+            // Loguear error de mail pero no cancelar la transacción del pago ya capturado
+            Log::error("Error enviando correo de orden {$orderId}: " . $e->getMessage());
+        }
 
         return $order;
     }
@@ -346,4 +262,51 @@ class OrderHandler
         return $this->orders->findById($id);
     }
 
+    /**
+     * Prepara los datos formateados para el servicio de correo
+     */
+    private function prepareOrderMailData($order): array
+    {
+        // 1. Obtener los items con sus nombres de producto
+        $items = [];
+        foreach ($order->items as $item) {
+            $items[] = [
+                'product_name' => $item->product->name,
+                'quantity'     => $item->quantity,
+                'unit_price'   => $item->unit_price,
+                'total_price'  => $item->total_price
+            ];
+        }
+
+        // 2. Cálculos de Desglose de IVA
+        // Recordatorio: $order->total ya es el monto FINAL (Subtotal + Envío + IVA)
+        $totalFinal = (float) $order->total;
+        $ivaPorcentaje = 21;
+
+        /**
+         * Operación Inversa para desglosar:
+         * Base Imponible = Total / 1.21
+         * IVA = Total - Base Imponible
+         */
+        $totalSinIva = $totalFinal / 1.21;
+        $ivaAmount   = $totalFinal - $totalSinIva;
+
+        return [
+            'order_number'      => $order->id,
+            'customer_id'       => $order->customer_id,
+            'customer_name'     => $order->delivery_name,
+            'purchase_date'     => $order->created_at->format('d/m/Y'),
+            'delivery_email'    => $order->delivery_email,
+            'subtotal_products' => $order->subtotal, // Neto de productos
+            'shipping' => [
+                'method_name'   => $order->shippingMethod->name,
+                'price'         => $order->shipping_price // Neto de envío
+            ],
+            'iva_percentage'    => $ivaPorcentaje,
+            'iva_amount'        => number_format($ivaAmount, 2, '.', ''),
+            'total_without_iva' => number_format($totalSinIva, 2, '.', ''),
+            'total_with_iva'    => number_format($totalFinal, 2, '.', ''),
+            'items'             => $items
+        ];
+    }
 }

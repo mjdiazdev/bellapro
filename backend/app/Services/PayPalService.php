@@ -26,13 +26,23 @@ class PayPalService
     /**
      * Obtener token OAuth
      */
-    private function getAccessToken(): string
+    public function getAccessToken()
     {
-        $response = Http::withBasicAuth($this->clientId, $this->secret)
-            ->asForm()
-            ->post($this->baseUrl . '/v1/oauth2/token', [
+        $response = Http::asForm()
+            ->withBasicAuth($this->clientId, $this->secret)
+            ->withOptions([
+                'curl' => [
+                    CURLOPT_IPRESOLVE => CURL_IPRESOLVE_V4, // Forzamos IPv4
+                ],
+            ])
+            ->timeout(30) // Aumentamos a 30 segundos
+            ->post("{$this->baseUrl}/v1/oauth2/token", [
                 'grant_type' => 'client_credentials'
             ]);
+
+        if ($response->failed()) {
+            throw new \Exception("Error obteniendo token: " . $response->body());
+        }
 
         return $response->json()['access_token'];
     }
@@ -44,6 +54,8 @@ class PayPalService
     {
         $token = $this->getAccessToken();
 
+        $formattedAmount = number_format($amount, 2, '.', '');
+
         $response = Http::withToken($token)->post(
             $this->baseUrl . '/v2/checkout/orders',
             [
@@ -52,9 +64,13 @@ class PayPalService
                     [
                         'amount' => [
                             'currency_code' => 'EUR',
-                            'value' => number_format($amount, 2, '.', '')
+                            'value' => $formattedAmount
                         ]
                     ]
+                ],
+                'application_context' => [
+                    'return_url' => env('PAYPAL_RETURN_URL'),
+                    'cancel_url' => env('PAYPAL_CANCEL_URL'),
                 ]
             ]
         );
@@ -65,12 +81,23 @@ class PayPalService
     /**
      * Capturar pago
      */
-    public function captureOrder(string $paypalOrderId): array
+    public function captureOrder($paypalOrderId)
     {
-        $token = $this->getAccessToken();
+        $accessToken = $this->getAccessToken();
 
-        $response = Http::withToken($token)
-            ->post($this->baseUrl . "/v2/checkout/orders/{$paypalOrderId}/capture");
+        $response = Http::withToken($accessToken)
+            ->withHeaders([
+                'Content-Type' => 'application/json',
+                'Accept' => 'application/json',
+            ])
+            ->withOptions([
+                'curl' => [
+                    CURLOPT_IPRESOLVE => CURL_IPRESOLVE_V4,
+                ],
+            ])
+            ->timeout(30)
+            ->withBody('{}', 'application/json')
+            ->post("{$this->baseUrl}/v2/checkout/orders/{$paypalOrderId}/capture");
 
         return $response->json();
     }

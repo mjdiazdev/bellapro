@@ -8,6 +8,7 @@ import ShippingMethods from './pages/Admin/ShippingMethods/ShippingMethodsListPa
 import Users from './pages/Admin/Users/UsersListPage';
 import StorePage from './pages/Client/Store/StorePage';
 import CheckoutPage from './pages/Client/Checkout/CheckoutPage';
+import PaymentConfirmPage from './pages/Client/Checkout/PaymentConfirmPage';
 import Products from './pages/Admin/Products/ProductsListPage';
 import Customers from './pages/Admin/Customers/CustomersListPage';
 import Orders from './pages/Admin/Orders/OrdersListPage';
@@ -43,6 +44,9 @@ export default function App() {
           <Route path="/store" element={<StorePage />} />
           <Route path="/checkout" element={<CheckoutPage />} />
           <Route path="/thanks" element={<Thanks />} />
+
+          {/* ESTA ES LA RUTA DONDE PAYPAL REGRESA AL USUARIO */}
+          <Route path="/checkout/payment-confirm" element={<PaymentConfirmPage />} />
 
         </Routes>
       </CartProvider>

@@ -54,7 +54,6 @@ const PaymentMethod = () => {
 
               <Input placeholder="Titular de la tarjeta" />
 
-              <Button fullWidth>Pagar ahora</Button>
             </div>
           )}
         </div>
@@ -69,7 +68,6 @@ const PaymentMethod = () => {
             icon={<RadioDot active={method === "paypal"} />}
             icons={<img src={paypal} className="w-8" alt="Paypal" />}
           />
-
           {method === "paypal" && (
             <div className="pl-6 text-sm text-gray-600">
               Después de hacer clic en <strong>Pagar con PayPal</strong>, se te

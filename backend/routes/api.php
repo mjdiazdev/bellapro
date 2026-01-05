@@ -24,6 +24,7 @@ use App\Http\Controllers\Api\DistributionCenterController;
 |
 */
 Route::post('orders', [OrderController::class, 'create']); // Crear una orden
+Route::post('orders/{orderId}/capture-paypal', [OrderController::class, 'capturePaypal']); // Capturar pago PayPal
 
 // Rutas para autenticación
 Route::post('login', [AuthController::class, 'login']);

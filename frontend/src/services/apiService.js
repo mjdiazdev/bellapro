@@ -56,12 +56,10 @@ export const createItem = async (resource, data) => {
   return res.data;
 };
 
-// Actualizar registro - Importante para Laravel y archivos
+// Actualizar registro
 export const updateItem = async (resource, id, data) => {
   const route = getRoute(resource);
-  
-  // Si la data es FormData (contiene archivos), Laravel exige enviar por POST 
-  // con el campo _method="PUT"
+
   if (data instanceof FormData) {
     data.append("_method", "PUT");
     const res = await api.post(`${route}/${id}`, data);
@@ -100,5 +98,15 @@ export const logout = async () => {
 export const bulkUpdateItems = async (resource, data) => {
   const route = getRoute(resource);
   const res = await api.post(`${route}/bulk-update`, data);
+  return res.data;
+};
+
+/**
+ * Captura el pago de PayPal una vez el usuario es redirigido de vuelta
+ */
+export const capturePaypalPayment = async (orderId, paypalOrderId) => {
+  const res = await api.post(`/orders/${orderId}/capture-paypal`, {
+    paypal_order_id: paypalOrderId
+  });
   return res.data;
 };

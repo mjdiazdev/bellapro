@@ -74,25 +74,26 @@ export default function CheckoutPage() {
     details: { intent: "CAPTURE" }
   });
 
+  // 1. Añadimos el estado de control de carga
+  const [isProcessing, setIsProcessing] = useState(false);
+
   // --- PROCESAR ORDEN ---
   const handlePlaceOrder = async () => {
-    if (!customer?.email) {
-      return alert("Debes ingresar un cliente válido");
-    }
+    
+    // 2. PROTECCIÓN INICIAL: Si ya está procesando, salimos de la función
+    if (isProcessing) return;
 
-    if (productsInCart.length === 0) {
-      return alert("El carrito está vacío");
-    }
-
-    if (!billingForm.nif || !billingForm.postal_code) {
-      return alert("Completa los datos de facturación");
-    }
-
-    if (shippingDifferent && !shippingForm.postal_code) {
-      return alert("Completa los datos de envío");
-    }
+    // 3. VALIDACIONES INICIALES (Igual que antes)
+    if (!customer?.email) return alert("Debes ingresar un cliente válido");
+    if (productsInCart.length === 0) return alert("El carrito está vacío");
+    if (!billingForm.nif || !billingForm.postal_code) return alert("Completa los datos de facturación");
+    if (shippingDifferent && !shippingForm.postal_code) return alert("Completa los datos de envío");
+    if (!selectedShippingId) return alert("Por favor, selecciona un método de envío");
 
     try {
+      // 4. ACTIVAMOS LA CARGA: Esto bloquea reintentos inmediatos
+      setIsProcessing(true);
+
       const billingData = {
         nif: billingForm.nif,
         email: customer.email,
@@ -117,33 +118,47 @@ export default function CheckoutPage() {
       const payload = {
         customer: billingData,
         delivery: deliveryData,
-        shipping_method_id: selectedShipping,
+        shipping_method_id: selectedShippingId,
         items: productsInCart.map(p => ({
           product_id: p.id,
           quantity: p.quantity
         })),
-        payment: selectedPayment
+        payment: {
+          ...selectedPayment,
+          amount: selectedPayment.amount 
+        }
       };
 
-      // 3. Crear el item en la API
-      await createItem("orders", payload);
+      // 5. LLAMADA AL BACKEND
+      const response = await createItem("orders", payload);
+      const result = response.data; 
 
-      // 4. Limpiar el carrito
-      clearCart();
+      if (!result) throw new Error("No se recibió respuesta del servidor.");
 
-      // 5. REDIRIGIR A LA PÁGINA DE GRACIAS
-      // Usamos replace: true para que el usuario no pueda volver al checkout con el botón "atrás"
-      navigate("/thanks", { replace: true });
+      if (selectedPayment.method === 'paypal' && result.paypal?.approve_url) {
+        localStorage.setItem("pending_order_id", result.order_id);
+        
+        // Al redirigir fuera de la web, no es necesario setear isProcessing a false
+        window.location.href = result.paypal.approve_url;
+
+      } else {
+        clearCart();
+        navigate("/thanks", { replace: true });
+      }
 
     } catch (error) {
+      // 6. IMPORTANTE: Si hay un error, debemos liberar el botón 
+      // para que el usuario pueda corregir y reintentar.
+      setIsProcessing(false);
+      
+      console.error("Error detallado:", error);
       alert(
         "Error al registrar la orden: " +
         (error.response?.data?.message || error.message)
       );
     }
   };
-
-  const [shippingMethods, setShippingMethods] = useState([]); // Nuevo: Guardar la lista completa
+  const [shippingMethods, setShippingMethods] = useState([]); // Guardar la lista completa
   const [selectedShippingId, setSelectedShippingId] = useState(null);
 
   // Buscamos el objeto del método seleccionado para pasarlo al resumen
@@ -174,29 +189,31 @@ export default function CheckoutPage() {
       <CheckoutHeader />
 
       <div className="max-w-6xl mx-auto px-6 py-10 pt-[80px] grid grid-cols-1 lg:grid-cols-2 gap-12">
-        {/* LADO DERECHO: RESUMEN */}
         <div className="order-1 lg:order-2">
           <div className="lg:sticky lg:top-24">
-            <OrderSummary 
-              selectedShippingMethod={currentShippingMethod} 
-            />
-            <Button onClick={handlePlaceOrder} fullWidth className="mt-4">
-              Completar Pago (€{selectedPayment.amount})
+            <OrderSummary selectedShippingMethod={currentShippingMethod} />
+            
+            {/* BOTÓN CON CONTROL DE ESTADO DE CARGA */}
+            <Button 
+              onClick={handlePlaceOrder} 
+              fullWidth 
+              className={`mt-4 ${isProcessing ? 'opacity-50 cursor-not-allowed' : ''}`}
+              disabled={isProcessing} // Desactiva el botón nativamente
+            >
+              {isProcessing ? "Procesando..." : `Completar Pago (€${selectedPayment.amount})`}
             </Button>
           </div>
         </div>
 
-        {/* LADO IZQUIERDO: FORMULARIOS */}
         <div className="space-y-10 order-2 lg:order-1">
+          {/* ... (Formularios se mantienen igual) ... */}
           <EmailCheckout onCustomerLoaded={setCustomer} />
-
           <BillingForm
             billingForm={billingForm}
             setBillingForm={setBillingForm}
             shippingDifferent={shippingDifferent}
             setShippingDifferent={setShippingDifferent}
           />
-
           {shippingDifferent && (
             <ShippingForm
               billingCustomer={billingForm}
@@ -204,20 +221,17 @@ export default function CheckoutPage() {
               setShippingForm={setShippingForm}
             />
           )}
-
           <ShippingMethod
             selectedShipping={selectedShippingId}
             setSelectedShipping={setSelectedShippingId}
-            onMethodsLoaded={setShippingMethods} // Nueva prop para capturar los métodos
+            onMethodsLoaded={setShippingMethods}
           />
-
           <PaymentMethod
             selectedPayment={selectedPayment}
             setSelectedPayment={setSelectedPayment}
           />
         </div>
       </div>
-
       <Footer />
     </div>
   );
