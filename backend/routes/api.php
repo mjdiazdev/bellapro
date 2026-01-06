@@ -47,6 +47,9 @@ Route::prefix('postal-codes')->group(function () {
     Route::get('/city/{cityId}', [PostalCodeController::class, 'getByCity']);
 });
 
+// Cargar métodos de envío de un centro de distribución de acuerdo el codigo postal
+Route::get('/distribution-centers/shipping-methods', [DistributionCenterController::class, 'getShippingMethods']);
+
 Route::get('qr/{code}', [CategoryController::class, 'showByCode']);
 
 
@@ -84,7 +87,6 @@ Route::middleware(['auth:sanctum', 'role:admin'])->group(function () {
      */
     Route::get('/distribution-centers', [DistributionCenterController::class, 'list']);
     Route::post('/distribution-centers', [DistributionCenterController::class, 'create']);
-    Route::get('/distribution-centers/shipping-methods', [DistributionCenterController::class, 'getShippingMethods']); // Cargar métodos de envío de un centro de distribución de acuerdo el codigo postal
     Route::get('/distribution-centers/{id}', [DistributionCenterController::class, 'show']);
     Route::put('/distribution-centers/{id}', [DistributionCenterController::class, 'update']);
     Route::delete('/distribution-centers/{id}', [DistributionCenterController::class, 'destroy']);

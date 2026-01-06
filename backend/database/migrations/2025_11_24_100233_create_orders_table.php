@@ -21,7 +21,7 @@ return new class extends Migration
             $table->string('delivery_address_extra')->nullable();
             $table->string('delivery_phone')->nullable();
             $table->foreignId('delivery_postal_code_id')->nullable()->constrained('postal_codes');
-            $table->foreignId('shipping_method_id')->nullable()->constrained('shipping_methods');
+            $table->foreignId('dist_center_shipping_method_id')->constrained('dist_center_shipping_method');
             $table->decimal('subtotal',12,2);
             $table->decimal('shipping_price',12,2)->default(0);
             $table->decimal('total',12,2);

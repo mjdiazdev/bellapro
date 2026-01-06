@@ -22,7 +22,8 @@ class OrderRepository
         return Order::with([
             'customer',
             'postalCode.city.province',
-            'shippingMethod',
+            'distributionCenterMethod.shippingMethod',
+            'distributionCenterMethod.distributionCenter',
             'items.product'
         ])->find($id);
     }
@@ -35,7 +36,7 @@ class OrderRepository
         return Order::with([
             'customer',
             'postalCode.city.province',
-            'shippingMethod',
+            'distributionCenterMethod.shippingMethod',
             'items.product'
         ])->orderByDesc('id')->get();
     }

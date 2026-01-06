@@ -46,7 +46,7 @@ class OrderHandler
             'customer.email' => 'required|email',
             'delivery' => 'required|array',
             'delivery.postal_code' => 'required|string',
-            'shipping_method_id' => 'required|integer',
+            'dist_center_shipping_method_id' => 'required|integer|exists:dist_center_shipping_method,id',
             'items' => 'required|array|min:1',
             'payment' => 'required|array',
             'payment.method' => 'required|string',
@@ -73,11 +73,8 @@ class OrderHandler
             // =======================
             // CUSTOMER (crear o actualizar)
             // =======================
-
-            // 1. Extraer datos del cliente
             $customerData = $data['customer'];
 
-            // 2. Validar campos mínimos obligatorios
             $validator = Validator::make($customerData, [
                 'nif' => 'required|string',
                 'email' => 'required|email',
@@ -89,33 +86,36 @@ class OrderHandler
                 throw new ValidationException($validator);
             }
 
-            // 3. Obtener ID del código postal desde el código
             $postalCode = $this->postalCodes->findByCode($customerData['postal_code']);
             if (!$postalCode) {
                 throw new \Exception('Código postal del cliente no válido');
             }
 
-            // 4. Sustituir postal_code por postal_code_id
             $customerData['postal_code_id'] = $postalCode->id;
             unset($customerData['postal_code']);
 
-            // 5. Buscar cliente por email
             $customer = $this->customers->findByEmail($customerData['email']);
 
-            // 6. Crear o actualizar cliente
             if ($customer) {
-                $customer->update($customerData); //Si existe, actualiza
+                $customer->update($customerData);
             } else {
-                $customer = $this->customers->create($customerData); //Si no existe, crea uno nuevo
+                $customer = $this->customers->create($customerData);
             }
 
             // =======================
-            // MÉTODO DE ENVÍO
+            // RELACIÓN MÉTODO DE ENVÍO Y CENTRO
             // =======================
-            $shippingMethod = $this->shippingMethods->findById($data['shipping_method_id']); //Obtener método de envío
-            if (!$shippingMethod) {
-                throw new \Exception('Método de envío no válido');
+            // Obtenemos la información del método de envío (precio) desde la tabla pivote
+            $shippingRelation = DB::table('dist_center_shipping_method as dcsm')
+                ->join('shipping_methods as sm', 'dcsm.shipping_method_id', '=', 'sm.id')
+                ->where('dcsm.id', $data['dist_center_shipping_method_id'])
+                ->select('sm.price', 'sm.name')
+                ->first();
+
+            if (!$shippingRelation) {
+                throw new \Exception('La opción de envío seleccionada no es válida o ya no existe.');
             }
+
             // =======================
             // DIRECCIÓN DE ENVÍO
             // =======================
@@ -130,23 +130,18 @@ class OrderHandler
             $subtotal = 0;
             foreach ($data['items'] as $item) {
                 $product = $this->products->findById($item['product_id']);
-                // 1. Acumular subtotal
                 $subtotal += $product->price * $item['quantity'];
 
-                // 2. DESCONTAR STOCK REAL
-                // Accedemos a la relación y restamos la cantidad
+                // Descontar stock (Lógica global actual)
                 $nuevoStock = $product->stock->stock - $item['quantity'];
                 $product->stock()->update(['stock' => $nuevoStock]);
             }
 
             // --- LÓGICA DE IVA 21% ---
-            $shippingPrice = $shippingMethod->price;
+            $shippingPrice = $shippingRelation->price;
             $ivaPorcentaje = 0.21;
 
-            // Calculamos el IVA sobre (Subtotal + Envío)
             $taxAmount = ($subtotal + $shippingPrice) * $ivaPorcentaje;
-
-            // El total final que guardamos y cobramos
             $totalFinal = $subtotal + $shippingPrice + $taxAmount;
 
             // =======================
@@ -156,18 +151,21 @@ class OrderHandler
                 'customer_id' => $customer->id,
                 'delivery_email' => $customerData['email'],
                 'delivery_name' => $data['delivery']['name'],
-                'delivery_nif' => $data['delivery']['nif'],
-                'delivery_phone' => $data['delivery']['phone'],
+                'delivery_nif' => $data['delivery']['nif'] ?? null,
+                'delivery_phone' => $data['delivery']['phone'] ?? null,
                 'delivery_address' => $data['delivery']['address'],
                 'delivery_postal_code_id' => $deliveryPostal->id,
-                'shipping_method_id' => $shippingMethod->id,
+                // NUEVO: Guardamos el ID de la relación centro-método
+                'dist_center_shipping_method_id' => $data['dist_center_shipping_method_id'],
                 'subtotal' => $subtotal,
                 'shipping_price' => $shippingPrice,
-                'total' => $totalFinal, // Total con IVA incluido
+                'total' => $totalFinal,
                 'status' => 'pending'
             ]);
 
-            // 6. CREAR ITEMS Y PAGO PENDIENTE
+            // =======================
+            // CREAR ITEMS Y PAGO
+            // =======================
             foreach ($data['items'] as $item) {
                 $product = $this->products->findById($item['product_id']);
                 $this->orderItems->create([
@@ -182,16 +180,17 @@ class OrderHandler
             $this->payments->create([
                 'order_id' => $order->id,
                 'method'   => $data['payment']['method'],
-                'amount'   => $totalFinal, // Cobramos el total con IVA
+                'amount'   => $totalFinal,
                 'status'   => 'pending'
             ]);
 
             DB::commit();
 
-            // 7. LÓGICA DE PAYPAL
+            // =======================
+            // LÓGICA DE PAYPAL
+            // =======================
             if ($data['payment']['method'] === 'paypal') {
                 $paypalService = new PayPalService();
-                // Enviamos el totalFinal (con IVA) a PayPal
                 $paypalOrder = $paypalService->createOrder($totalFinal);
 
                 $this->payments->updateStatus($order->id, 'pending', ['paypal_order_id' => $paypalOrder['id']]);
@@ -279,7 +278,7 @@ class OrderHandler
         }
 
         // 2. Cálculos de Desglose de IVA
-        // Recordatorio: $order->total ya es el monto FINAL (Subtotal + Envío + IVA)
+        // $order->total ya es el monto FINAL (Subtotal + Envío + IVA)
         $totalFinal = (float) $order->total;
         $ivaPorcentaje = 21;
 
@@ -299,7 +298,11 @@ class OrderHandler
             'delivery_email'    => $order->delivery_email,
             'subtotal_products' => $order->subtotal, // Neto de productos
             'shipping' => [
-                'method_name'   => $order->shippingMethod->name,
+                /**
+                 * ADAPTACIÓN: Ahora el nombre se obtiene desde la relación del pivot
+                 * Order -> distributionCenterMethod -> shippingMethod -> name
+                 */
+                'method_name'   => $order->distributionCenterMethod->shippingMethod->name,
                 'price'         => $order->shipping_price // Neto de envío
             ],
             'iva_percentage'    => $ivaPorcentaje,
