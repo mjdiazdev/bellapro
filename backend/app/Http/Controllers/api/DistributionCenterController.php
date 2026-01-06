@@ -75,4 +75,22 @@ class DistributionCenterController extends Controller
         }
         return response()->json(['message' => 'Centro eliminado correctamente']);
     }
+
+    /**
+     * Obtener métodos de envío disponibles según el código postal.
+     */
+    public function getShippingMethods(Request $request, DistributionCenterHandler $handler)
+    {
+        try {
+            $postalCode = $request->query('postal_code');
+            $methods = $handler->getMethodsByPostalCode($postalCode);
+
+            return response()->json([
+                'status' => 'success',
+                'data'   => $methods
+            ]);
+        } catch (\Exception $e) {
+            return response()->json(['message' => $e->getMessage()], 422);
+        }
+    }
 }

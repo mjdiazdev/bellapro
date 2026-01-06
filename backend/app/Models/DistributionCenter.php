@@ -31,6 +31,8 @@ class DistributionCenter extends Model
      */
     public function shippingMethods()
     {
-        return $this->belongsToMany(ShippingMethod::class, 'dist_center_shipping_method');
+        return $this->belongsToMany(ShippingMethod::class, 'dist_center_shipping_method')
+                    ->withPivot('id') // <--- Esto traerá el ID de la relación
+                    ->withTimestamps();
     }
 }

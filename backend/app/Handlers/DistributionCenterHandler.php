@@ -86,4 +86,22 @@ class DistributionCenterHandler
     {
         return $this->repository->delete($id);
     }
+
+    /**
+     * Obtener métodos de envío disponibles según el código postal.
+     */
+    public function getMethodsByPostalCode(string $postalCode)
+    {
+        $postalCode = trim($postalCode);
+        if (empty($postalCode)) return collect();
+
+        // Buscamos siguiendo la jerarquía: Ciudad > Provincia > Proximidad
+        $center = $this->repository->findNearestCenter($postalCode);
+
+        if (!$center) {
+            throw new \Exception("No hay centros de distribución operativos en este momento.");
+        }
+
+        return $center->shippingMethods;
+    }
 }
