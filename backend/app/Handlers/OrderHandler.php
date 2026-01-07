@@ -155,7 +155,6 @@ class OrderHandler
                 'delivery_phone' => $data['delivery']['phone'] ?? null,
                 'delivery_address' => $data['delivery']['address'],
                 'delivery_postal_code_id' => $deliveryPostal->id,
-                // NUEVO: Guardamos el ID de la relación centro-método
                 'dist_center_shipping_method_id' => $data['dist_center_shipping_method_id'],
                 'subtotal' => $subtotal,
                 'shipping_price' => $shippingPrice,
@@ -266,6 +265,8 @@ class OrderHandler
      */
     private function prepareOrderMailData($order): array
     {
+        $order->load(['items.product', 'distributionCenterMethod.shippingMethod']);
+
         // 1. Obtener los items con sus nombres de producto
         $items = [];
         foreach ($order->items as $item) {
@@ -298,11 +299,7 @@ class OrderHandler
             'delivery_email'    => $order->delivery_email,
             'subtotal_products' => $order->subtotal, // Neto de productos
             'shipping' => [
-                /**
-                 * ADAPTACIÓN: Ahora el nombre se obtiene desde la relación del pivot
-                 * Order -> distributionCenterMethod -> shippingMethod -> name
-                 */
-                'method_name'   => $order->distributionCenterMethod->shippingMethod->name,
+                'method_name'   => $order->distributionCenterMethod->shippingMethod->name ?? 'Envío Estándar',
                 'price'         => $order->shipping_price // Neto de envío
             ],
             'iva_percentage'    => $ivaPorcentaje,

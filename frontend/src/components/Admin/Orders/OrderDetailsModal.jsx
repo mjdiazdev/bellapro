@@ -142,24 +142,40 @@ export default function OrderDetailsModal({ orderId, onClose }) {
         </div>
 
         {/* ============================
-           MÉTODO DE ENVÍO
-           ============================ */}
-        <div className="mt-6 border rounded-lg p-4">
+            MÉTODO DE ENVÍO Y LOGÍSTICA
+            ============================ */}
+        <div className="mt-6 border rounded-lg p-4 bg-gray-50">
           <h2 className="font-semibold text-gray-700 mb-2">
-            Método de envío
+            Información Logística
           </h2>
 
-          <p className="font-medium">
-            {order.shipping_method?.name}
-          </p>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            {/* Datos del Método */}
+            <div>
+              <p className="text-xs text-gray-500 uppercase font-bold">Servicio de entrega</p>
+              <p className="font-medium">
+                {order.distribution_center_method?.shipping_method?.name || "No especificado"}
+              </p>
+              <p className="text-sm text-gray-600">
+                {order.distribution_center_method?.shipping_method?.description}
+              </p>
+            </div>
 
-          <p className="text-sm text-gray-600">
-            {order.shipping_method?.description}
-          </p>
+            {/* Datos del Centro de Distribución */}
+            <div>
+              <p className="text-xs text-gray-500 uppercase font-bold">Centro de Distribucción</p>
+              <p className="font-medium text-pink-600">
+                {order.distribution_center_method?.distribution_center?.name || "Pendiente de asignación"}
+              </p>
+              <p className="text-sm text-gray-600">
+                Tel: {order.distribution_center_method?.distribution_center?.phone}
+              </p>
+            </div>
+          </div>
 
-          <p className="mt-1">
-            <strong>Coste:</strong>{" "}
-            €{Number(order.shipping_method?.price).toFixed(2)}
+          <p className="mt-3 pt-2 border-t border-gray-200">
+            <strong>Coste de envío:</strong>{" "}
+            €{Number(order.shipping_price).toFixed(2)}
           </p>
         </div>
 

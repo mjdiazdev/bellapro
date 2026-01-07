@@ -74,6 +74,16 @@ export default function CheckoutPage() {
     details: { intent: "CAPTURE" }
   });
 
+  // Estado para el código postal activo
+  const [activePostalCode, setActivePostalCode] = useState("");
+
+  useEffect(() => {
+    // Si la dirección de envío es diferente, mandamos el CP de ShippingForm
+    // Si es la misma, mandamos el CP de BillingForm
+    const cp = shippingDifferent ? shippingForm.postal_code : billingForm.postal_code;
+    setActivePostalCode(cp);
+  }, [shippingDifferent, shippingForm.postal_code, billingForm.postal_code]);
+
   // 1. Añadimos el estado de control de carga
   const [isProcessing, setIsProcessing] = useState(false);
 
@@ -118,7 +128,7 @@ export default function CheckoutPage() {
       const payload = {
         customer: billingData,
         delivery: deliveryData,
-        shipping_method_id: selectedShippingId,
+        dist_center_shipping_method_id: selectedShippingId,
         items: productsInCart.map(p => ({
           product_id: p.id,
           quantity: p.quantity
@@ -221,10 +231,11 @@ export default function CheckoutPage() {
               setShippingForm={setShippingForm}
             />
           )}
-          <ShippingMethod
-            selectedShipping={selectedShippingId}
+          <ShippingMethod 
+            selectedShipping={selectedShippingId} 
             setSelectedShipping={setSelectedShippingId}
-            onMethodsLoaded={setShippingMethods}
+            onMethodsLoaded={(methods) => setShippingMethods(methods)}
+            postalCode={activePostalCode} 
           />
           <PaymentMethod
             selectedPayment={selectedPayment}

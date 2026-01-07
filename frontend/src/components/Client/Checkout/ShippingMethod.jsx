@@ -1,47 +1,60 @@
 import React, { useState, useEffect } from "react";
 import RadioCard from "../../common/variant/RadioCard";
 import { Truck, Bolt, Gift } from "lucide-react";
-import { getAll } from "../../../services/apiService";
+import { getAbsolute } from "../../../services/apiService"; 
 
-/**
- * Mapa de iconos basado en el nombre que viene de la base de datos.
- */
 const iconMap = {
   "Envío Estándar": <Truck className="w-4 h-4 text-gray-500" />,
   "Envío Express": <Bolt className="w-4 h-4 text-gray-500" />,
   "Envío Gratuito": <Gift className="w-4 h-4 text-gray-500" />
 };
 
-/**
- * @param {number} selectedShipping - ID del método seleccionado.
- * @param {function} setSelectedShipping - Función para actualizar el ID.
- * @param {function} onMethodsLoaded - NUEVA PROP: Callback para enviar los métodos al padre (CheckoutPage).
- */
-const ShippingMethod = ({ selectedShipping, setSelectedShipping, onMethodsLoaded }) => {
+const ShippingMethod = ({ selectedShipping, setSelectedShipping, onMethodsLoaded, postalCode }) => {
   const [methods, setMethods] = useState([]);
   const [loading, setLoading] = useState(false);
 
   useEffect(() => {
+    // Si no hay código postal, no intentamos cargar nada
+    if (!postalCode) {
+      setMethods([]);
+      return;
+    }
+
     const loadShippingMethods = async () => {
       setLoading(true);
       try {
-        const res = await getAll("shippingMethods");
-        const methodsArray = Array.isArray(res) ? res : res.data || [];
+        const res = await getAbsolute(`/distribution-centers/shipping-methods?postal_code=${postalCode}`);
         
-        setMethods(methodsArray);
+        // Verificamos si res.data tiene la propiedad data (Laravel Resource) o es el array directo
+        const rawData = res.data?.data || res.data || [];
+        
+        console.log("Datos crudos recibidos:", rawData); // MIRA ESTO EN CONSOLA
 
-        // --- IMPORTANTE: Notificamos al padre (CheckoutPage) los métodos cargados ---
-        // Esto permite que el Resumen de Orden sepa el precio de cada ID.
-        if (onMethodsLoaded) {
-          onMethodsLoaded(methodsArray);
-        }
+        if (Array.isArray(rawData) && rawData.length > 0) {
+          const formattedMethods = rawData.map(method => ({
+            id: method.pivot?.id || method.id, // Priorizamos el ID del pivote
+            name: method.name,
+            description: method.description,
+            price: method.price
+          }));
 
-        // Selección por defecto: Si no hay nada seleccionado, tomamos el primero.
-        if (!selectedShipping && methodsArray.length > 0) {
-          setSelectedShipping(methodsArray[0].id);
+          setMethods(formattedMethods);
+
+          // Notificar al padre después de actualizar el estado local
+          if (onMethodsLoaded) {
+            onMethodsLoaded(formattedMethods);
+          }
+
+          // Auto-selección inteligente
+          if (!selectedShipping || !formattedMethods.some(m => m.id === selectedShipping)) {
+            setSelectedShipping(formattedMethods[0].id);
+          }
+        } else {
+          setMethods([]);
+          if (onMethodsLoaded) onMethodsLoaded([]);
         }
       } catch (error) {
-        console.error("Error loading shipping methods", error);
+        console.error("Error cargando métodos:", error);
         setMethods([]);
       } finally {
         setLoading(false);
@@ -49,25 +62,26 @@ const ShippingMethod = ({ selectedShipping, setSelectedShipping, onMethodsLoaded
     };
 
     loadShippingMethods();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []); // Solo se ejecuta al montar el componente
+  }, [postalCode]); // Se dispara cada vez que cambia el código postal
 
   return (
     <section>
-      <h2 className="text-lg font-semibold text-gray-700 mb-3">
-        Método de envío
-      </h2>
+      <h2 className="text-lg font-semibold text-gray-700 mb-3">Método de envío</h2>
 
-      {loading && (
-        <p className="text-sm text-gray-500 animate-pulse">
-          Cargando métodos de envío...
+      {!postalCode && (
+        <p className="text-sm text-amber-600 bg-amber-50 p-3 rounded-lg border border-amber-100">
+          ⚠️ Por favor, selecciona una ciudad y código postal para ver opciones de envío.
         </p>
       )}
 
+      {loading && (
+        <p className="text-sm text-gray-500 animate-pulse">Buscando el centro logístico más cercano...</p>
+      )}
+
       <div className="space-y-3">
-        {!loading && methods.length === 0 && (
-          <p className="text-sm text-gray-500 italic">
-            No hay métodos de envío disponibles en este momento.
+        {!loading && postalCode && methods.length === 0 && (
+          <p className="text-sm text-red-500 italic">
+            Lo sentimos, no hay repartos disponibles para el código postal {postalCode}.
           </p>
         )}
 
@@ -76,7 +90,6 @@ const ShippingMethod = ({ selectedShipping, setSelectedShipping, onMethodsLoaded
             key={method.id}
             title={method.name}
             subtitle={method.description}
-            // Formateamos el precio para que siempre tenga 2 decimales
             price={Number(method.price) === 0 ? "Gratis" : `€${Number(method.price).toFixed(2)}`}
             icon={iconMap[method.name] || <Truck className="w-4 h-4 text-gray-500" />}
             value={method.id}

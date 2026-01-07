@@ -1,7 +1,6 @@
 import React, { useState } from "react";
 import RadioCard from "../../common/variant/RadioCard";
 import Input from "../../common/variant/Input";
-import Button from "../../common/variant/Button";
 import visa from "../../../assets/visa.png";
 import mastercard from "../../../assets/mastercard.png";
 import paypal from "../../../assets/paypal.png";

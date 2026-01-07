@@ -45,7 +45,6 @@
                                 <div style="background:#f2f2f2; padding:10px; border-radius:5px; width:230px;">
                                     <p style="margin:0; font-size:14px; line-height:1.4;">
                                         <strong>Nombre:</strong> {{ $data['customer_name'] }} <br>
-                                        <strong>ID:</strong> {{ $data['customer_id'] }} <br>
                                         <strong>Fecha de compra:</strong> {{ $data['purchase_date'] }}
                                     </p>
                                 </div>
