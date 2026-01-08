@@ -14,6 +14,7 @@ import Customers from './pages/Admin/Customers/CustomersListPage';
 import Orders from './pages/Admin/Orders/OrdersListPage';
 import DistributionCentersList from './pages/Admin/DistributionCenters/DistributionCentersPage';
 import Thanks from './pages/Client/Checkout/ThanksPage';
+import InfoPage from './pages/Client/Info/InfoPage';
 
 function RequireAuth({children}) {
   const token = localStorage.getItem('token');
@@ -28,6 +29,7 @@ export default function App() {
 
           {/* CLIENTE */}
           <Route path="/" element={<StorePage />} />
+          <Route path="/info/:slug" element={<InfoPage />} />
 
           {/* ADMIN */}
           <Route path="/login" element={<Login/>} />

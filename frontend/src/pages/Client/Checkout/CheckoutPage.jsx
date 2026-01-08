@@ -67,7 +67,6 @@ export default function CheckoutPage() {
     postal_code_id: ""
   });
 
-  const [selectedShipping] = useState(1);
   const [selectedPayment, setSelectedPayment] = useState({
     method: "paypal",
     amount: productsInCart.reduce((sum, p) => sum + p.price * p.quantity, 0),
@@ -195,7 +194,7 @@ export default function CheckoutPage() {
   }, [currentShippingMethod, productsInCart, setSelectedPayment]);
 
   return (
-    <div className="min-h-screen bg-pink-50">
+    <div className="min-h-screen">
       <CheckoutHeader />
 
       <div className="max-w-6xl mx-auto px-6 py-10 pt-[80px] grid grid-cols-1 lg:grid-cols-2 gap-12">
