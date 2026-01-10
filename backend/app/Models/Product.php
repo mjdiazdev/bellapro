@@ -13,10 +13,10 @@ class Product extends Model
 {
     // Campos permitidos para asignación masiva
     protected $fillable = [
-        'category_id', 'name', 'reference', 'price', 'description', 'photo_url'
+        'category_id', 'name', 'reference', 'price', 'description'
     ];
 
-    protected $appends = ['full_photo_url'];
+    protected $appends = ['image_url'];
 
     /**
      * Relación: un producto pertenece a una categoría.
@@ -32,14 +32,24 @@ class Product extends Model
         return $this->hasOne(ProductStock::class);
     }
 
-    public function getFullPhotoUrlAttribute()
+    /**
+     * Accesor inteligente: Busca el archivo físico basado en la referencia.
+     */
+    public function getImageUrlAttribute()
     {
-        if ($this->photo_url) {
-            // Genera: http://tu-dominio/storage/products/archivo.jpg
-            return asset('storage/' . $this->photo_url);
+        if (!$this->reference) {
+            return asset('images/placeholder-product.png');
         }
 
-        // Imagen por defecto si no hay una subida
+        $extensions = ['jpg', 'jpeg', 'png', 'webp'];
+
+        foreach ($extensions as $ext) {
+            $path = "products/{$this->reference}.{$ext}";
+            if (Storage::disk('public')->exists($path)) {
+                return asset('storage/' . $path);
+            }
+        }
+
         return asset('images/placeholder-product.png');
     }
 }

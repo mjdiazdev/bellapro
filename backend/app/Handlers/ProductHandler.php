@@ -33,13 +33,13 @@ class ProductHandler
         }
 
         return DB::transaction(function () use ($data) {
-            // Manejo del archivo
+            // 1. Manejo del archivo: Guardar con el nombre de la referencia
             if (isset($data['image']) && $data['image'] instanceof \Illuminate\Http\UploadedFile) {
-                // Esto guardará el archivo en: storage/app/public/products
-                $path = $data['image']->store('products', 'public');
+                $extension = $data['image']->getClientOriginalExtension();
+                $fileName = $data['reference'] . '.' . $extension; // Ejemplo: 140070001.jpg
 
-                // Guardamos esa ruta en el campo 'photo_url' o 'image' de tu DB
-                $data['photo_url'] = $path;
+                // Guardamos en 'public/products' con el nombre manual
+                $data['image']->storeAs('products', $fileName, 'public');
             }
 
             // Crear el producto con la ruta del archivo ya seteada
@@ -88,29 +88,43 @@ class ProductHandler
         return DB::transaction(function () use ($id, $data) {
             // Buscamos el producto actual para tener acceso a la ruta de la imagen anterior
             $product = $this->products->findById($id);
+            if (!$product) throw new \Exception('Producto no encontrado');
 
-            if (!$product) {
-                throw new \Exception('Producto no encontrado');
+            $oldReference = $product->reference;
+            $newReference = $data['reference'] ?? $oldReference;
+
+            // --- CASO 1: Si la referencia cambió, renombrar archivos existentes ---
+            if ($newReference !== $oldReference) {
+                $extensions = ['jpg', 'jpeg', 'png', 'webp'];
+                foreach ($extensions as $ext) {
+                    $oldPath = "products/{$oldReference}.{$ext}";
+                    if (Storage::disk('public')->exists($oldPath)) {
+                        $newPath = "products/{$newReference}.{$ext}";
+                        Storage::disk('public')->move($oldPath, $newPath);
+                    }
+                }
             }
 
-            // 3. Manejo de la Nueva Imagen
+            // --- CASO 2: Si se sube una imagen nueva ---
             if (isset($data['image']) && $data['image'] instanceof \Illuminate\Http\UploadedFile) {
-                // Eliminar la imagen anterior del disco 'public' si existe
-                if ($product->photo_url) {
-                    Storage::disk('public')->delete($product->photo_url);
+                // Borrar cualquier imagen previa con la referencia (nueva o vieja) para evitar duplicidad de extensiones
+                $extensions = ['jpg', 'jpeg', 'png', 'webp'];
+                foreach ($extensions as $ext) {
+                    Storage::disk('public')->delete("products/{$newReference}.{$ext}");
                 }
 
-                // Guardar la nueva imagen
-                $path = $data['image']->store('products', 'public');
-
-                // Actualizamos el campo con la nueva ruta relativa
-                $data['photo_url'] = $path;
+                // Guardar la nueva con el nombre de la referencia actual
+                $extension = $data['image']->getClientOriginalExtension();
+                $fileName = $newReference . '.' . $extension;
+                $data['image']->storeAs('products', $fileName, 'public');
             }
 
-            // 4. Actualizar datos básicos del producto
+            // --- CASO 3: Actualizar datos en BD ---
+            // Eliminamos 'image' del array data para que no intente guardarlo en la BD
+            unset($data['image']);
             $product = $this->products->update($id, $data);
 
-            // 5. Actualizar el Stock
+            // --- CASO 4: Actualizar Stock ---
             if (isset($data['stock']) || isset($data['min_stock'])) {
                 $product->stock()->updateOrCreate(
                     ['product_id' => $product->id],
