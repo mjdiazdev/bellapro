@@ -49,7 +49,7 @@ export default function ProductDetailsModal({ productId, onClose }) {
           {/* Lado Izquierdo: Imagen */}
           <div className="md:w-1/2 bg-gray-50 flex items-center justify-center p-6 border-r border-gray-100">
             <img 
-              src={product.full_photo_url || 'https://via.placeholder.com/300'} 
+              src={product.image_url || 'https://via.placeholder.com/300'} 
               alt={product.name} 
               className="w-full h-64 object-cover rounded-xl shadow-md border border-white"
               onError={(e) => { e.target.src = 'https://via.placeholder.com/300'; }}

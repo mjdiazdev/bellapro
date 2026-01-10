@@ -9,6 +9,7 @@ import ProductsList from "../../../components/Admin/Products/ProductsList";
 import ConfirmModal from "../../../components/common/ConfirmModal";
 import Modal from "../../../components/common/Modal";
 import AlertModal from "../../../components/common/AlertModal";
+import BulkImportButton from "../../../components/Admin/Products/BulkImportButton";
 
 // Hooks & Services
 import useCrud from "../../../hooks/useCrud";
@@ -75,6 +76,7 @@ export default function ProductsListPage() {
       return item;
     }));
   };
+  
 
   /**
    * === GUARDADO MASIVO (BULK UPDATE) ===
@@ -187,6 +189,21 @@ export default function ProductsListPage() {
     alertModal.show();
   };
 
+  /**
+   * === IMPORTACIÓN MASIVA ===
+   */
+  const handleImportSuccess = (message) => {
+    setAlertType("success");
+    setAlertMessage(message);
+    alertModal.show();
+    loadData(); // Recarga la tabla
+  };
+
+  const handleImportError = (message) => {
+    setAlertType("error");
+    setAlertMessage(message);
+    alertModal.show();
+  };
   return (
     <div className="flex flex-col min-h-screen overflow-x-hidden">
       <Header />
@@ -201,6 +218,10 @@ export default function ProductsListPage() {
 
             {/* Botones de acción principales */}
             <div className="flex flex-col sm:flex-row justify-end gap-4 mb-6">
+              <BulkImportButton 
+                onImportSuccess={handleImportSuccess}
+                onImportError={handleImportError}
+              />
               <Button width="150px" onClick={handleCreate}>+ Nuevo Producto</Button>
             </div>
 

@@ -8,16 +8,17 @@ export default function ProductsList({ products, onEdit, onDelete, onLocalChange
   const columns = [
     {
       header: 'Imagen',
-      key: 'photo_url', // Mantenemos el key pero cambiamos el render
+      key: 'image_url', // Mantenemos el key pero cambiamos el render
       render: (p) => (
         <img 
-          src={p.full_photo_url || 'https://via.placeholder.com/40'} 
+          src={p.image_url || 'https://via.placeholder.com/40'} 
           alt={p.name}
           className="w-10 h-10 object-cover rounded-md border border-gray-200"
           onError={(e) => { e.target.src = 'https://via.placeholder.com/40'; }}
         />
       )
     },
+    { header: 'Referencia', key: 'reference' },
     { header: 'Nombre', key: 'name' },
     // --- COLUMNA PRECIO EDITABLE ---
     { 

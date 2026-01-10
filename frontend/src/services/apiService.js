@@ -110,3 +110,13 @@ export const capturePaypalPayment = async (orderId, paypalOrderId) => {
   });
   return res.data;
 };
+
+/**
+ * Función para realizar un POST absoluto
+ */
+export const postAbsolute = async (endpoint, data) => {
+    // Es importante pasar los headers correctamente para FormData si es necesario, 
+    // aunque axios suele detectarlo automáticamente al pasar un objeto FormData
+    const response = await api.post(endpoint, data);
+    return response.data;
+};

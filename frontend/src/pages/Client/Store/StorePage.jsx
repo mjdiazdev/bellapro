@@ -36,7 +36,7 @@ export default function StorePage() {
         name: p.name,
         reference: p.reference,
         price: Number(p.price),
-        image: p.full_photo_url || "https://via.placeholder.com/100",
+        image: p.image_url
       }));
 
         // Solo cargamos el catálogo de la categoría actual
