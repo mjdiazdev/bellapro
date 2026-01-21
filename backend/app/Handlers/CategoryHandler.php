@@ -37,7 +37,7 @@ class CategoryHandler
         );
         $writer = new Writer($renderer);
 
-        $frontendUrl = env('FRONTEND_URL', 'http://localhost:3000');
+        $frontendUrl = env('FRONTEND_URL', 'http://212.83.155.37');
         $qrContent = $frontendUrl . '/store?qr=' . $category->code;
 
         // Generar SVG del QR
