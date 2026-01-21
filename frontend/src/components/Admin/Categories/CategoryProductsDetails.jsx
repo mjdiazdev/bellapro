@@ -79,7 +79,7 @@ export default function CategoryProductsDetails({ categoryCode }) {
 
       {/* Código QR de la categoría */}
       <img
-        src={`http://localhost:8000/storage/${category.qr_url}`}
+        src={`http://${process.env.REACT_APP_BACKEND_URL}/storage/${category.qr_url}`}
         alt="QR"
         className="mb-6 w-40 h-40"
       />
