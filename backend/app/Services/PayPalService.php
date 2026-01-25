@@ -53,7 +53,6 @@ class PayPalService
     public function createOrder(float $amount): array
     {
         $token = $this->getAccessToken();
-
         $formattedAmount = number_format($amount, 2, '.', '');
 
         $response = Http::withToken($token)->post(
@@ -71,6 +70,9 @@ class PayPalService
                 'application_context' => [
                     'return_url' => env('PAYPAL_RETURN_URL'),
                     'cancel_url' => env('PAYPAL_CANCEL_URL'),
+                    'brand_name' => 'BellaPro',
+                    'user_action' => 'PAY_NOW',
+                    'shipping_preference' => 'NO_SHIPPING'
                 ]
             ]
         );
