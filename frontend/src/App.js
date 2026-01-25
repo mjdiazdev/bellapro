@@ -15,6 +15,7 @@ import Orders from './pages/Admin/Orders/OrdersListPage';
 import DistributionCentersList from './pages/Admin/DistributionCenters/DistributionCentersPage';
 import Thanks from './pages/Client/Checkout/ThanksPage';
 import InfoPage from './pages/Client/Info/InfoPage';
+import NotFoundPage from './pages/NotFoundPage';
 
 function RequireAuth({children}) {
   const token = localStorage.getItem('token');
@@ -50,6 +51,7 @@ export default function App() {
           {/* ESTA ES LA RUTA DONDE PAYPAL REGRESA AL USUARIO */}
           <Route path="/checkout/payment-confirm" element={<PaymentConfirmPage />} />
 
+          <Route path="*" element={<NotFoundPage />} />
         </Routes>
       </CartProvider>
     </BrowserRouter>
