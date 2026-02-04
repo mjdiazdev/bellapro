@@ -1,4 +1,5 @@
 import React, { useState } from "react";
+import { Link } from "react-router-dom";
 import { ReactComponent as Logo } from "../../assets/logo.svg";
 import { QrCode, ShoppingCart, Menu as MenuIcon } from "lucide-react"; // Renombrado para evitar conflicto
 import QRScanModal from "./QRScanModal";
@@ -19,7 +20,9 @@ export default function Header() {
       <header className="w-full bg-pink-50 fixed top-0 left-0 z-50">
         <div className="max-w-[1150px] mx-auto px-4 py-4 flex items-center justify-between">
           <div className="flex items-center space-x-2">
-            <Logo className="h-8" />
+            <Link to="/" className="flex items-center space-x-2 hover:opacity-80 transition-opacity">
+              <Logo className="h-8" />
+            </Link>
           </div>
 
           <div className="flex items-center space-x-4">

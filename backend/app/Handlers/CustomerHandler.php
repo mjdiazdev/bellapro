@@ -91,14 +91,6 @@ class CustomerHandler
     }
 
     /**
-     * Eliminar un customer por NIF
-     */
-    public function deleteByNif(string $nif): bool
-    {
-        return $this->customers->deleteByNif($nif);
-    }
-
-    /**
      * Obtener un customer por su ID
      */
     public function findById(int $id)
@@ -111,6 +103,17 @@ class CustomerHandler
      */
     public function deleteById(int $id): bool
     {
+        $customer = $this->customers->findById($id);
+
+        if (!$customer) {
+            return false;
+        }
+
+        // No borrar clientes con historial de compras
+        if ($customer->orders()->exists()) {
+            throw new \Exception("No se puede eliminar al cliente '{$customer->name}' porque tiene pedidos registrados en el sistema.");
+        }
+
         return $this->customers->deleteById($id);
     }
 

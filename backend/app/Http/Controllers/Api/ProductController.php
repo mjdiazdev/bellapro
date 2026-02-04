@@ -120,11 +120,17 @@ class ProductController extends Controller
      */
     public function destroy(ProductHandler $handler, $id)
     {
-        if (!$handler->delete($id)) {
-            return response()->json(['message'=>'Producto no encontrado'], 404);
-        }
+        try {
+            if (!$handler->delete($id)) {
+                return response()->json(['message' => 'Producto no encontrado'], 404);
+            }
+            return response()->json(['message' => 'Producto eliminado correctamente']);
 
-        return response()->json(['message'=>'Producto eliminado correctamente']);
+        } catch (\Exception $e) {
+            return response()->json([
+                'message' => $e->getMessage()
+            ], 422);
+        }
     }
 
     /**

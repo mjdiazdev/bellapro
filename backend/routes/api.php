@@ -125,6 +125,5 @@ Route::prefix('customers')->group(function () {
     Route::delete('/{id}', [CustomerController::class, 'destroyById']);
     Route::get('/email/{email}', [CustomerController::class, 'show']);   // Consultar por email
     Route::put('/email/{email}', [CustomerController::class, 'update']); // Modificar por email
-    Route::delete('/nif/{nif}', [CustomerController::class, 'destroy']); // Eliminar por NIF
 });
 

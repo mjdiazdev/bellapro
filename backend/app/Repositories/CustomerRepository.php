@@ -56,17 +56,6 @@ class CustomerRepository
     }
 
     /**
-     * Eliminar customer por NIF
-     */
-    public function deleteByNif(string $nif): bool
-    {
-        $customer = $this->findByNif($nif);
-        if (!$customer) return false;
-
-        return (bool) $customer->delete();
-    }
-
-    /**
      * Obtener un customer por su ID
      */
     public function findById(int $id): ?Customer

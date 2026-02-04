@@ -52,4 +52,14 @@ class ShippingMethodRepository
 
         return (bool) $method->delete();
     }
+
+    /**
+     * Verificar si el método de envio posee ordener
+     */
+    public function hasOrders(int $id): bool
+    {
+        return \App\Models\DistributionCenterShippingMethod::where('shipping_method_id', $id)
+            ->whereHas('orders')
+            ->exists();
+    }
 }

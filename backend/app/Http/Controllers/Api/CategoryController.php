@@ -118,7 +118,9 @@ class CategoryController extends Controller
             return response()->json(['message'=>'Categoria eliminada correctamente']);
 
         } catch (\Exception $e) {
-            return response()->json(['error' => $e->getMessage()], 500);
+            return response()->json([
+                'message' => $e->getMessage()
+            ], 422);
         }
     }
 

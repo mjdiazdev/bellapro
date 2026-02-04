@@ -73,11 +73,18 @@ class ShippingMethodController extends Controller
      */
     public function destroy(ShippingMethodHandler $handler, $id)
     {
-        if (!$handler->delete($id)) {
-            return response()->json(['message' => 'Método de envío no encontrado'], 404);
-        }
+        try {
+            if (!$handler->delete($id)) {
+                return response()->json(['message' => 'Método de envío no encontrado'], 404);
+            }
 
-        return response()->json(['message' => 'Método de envío eliminado correctamente']);
+            return response()->json(['message' => 'Método de envío eliminado correctamente']);
+
+        } catch (\Exception $e) {
+            return response()->json([
+                'message' => $e->getMessage()
+            ], 422);
+        }
     }
 
     /**

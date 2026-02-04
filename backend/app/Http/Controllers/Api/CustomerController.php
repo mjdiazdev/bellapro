@@ -52,22 +52,20 @@ class CustomerController extends Controller
         }
     }
 
-    public function destroy(CustomerHandler $handler, $nif)
-    {
-        if (!$handler->deleteByNif($nif)) {
-            return response()->json(['message' => 'Cliente no encontrado'], 404);
-        }
-
-        return response()->json(['message' => 'Cliente eliminado correctamente']);
-    }
-
     public function destroyById(CustomerHandler $handler, $id)
     {
-        if (!$handler->deleteById($id)) {
-            return response()->json(['message' => 'Cliente no encontrado'], 404);
-        }
+        try {
+            if (!$handler->deleteById($id)) {
+                return response()->json(['message' => 'Cliente no encontrado'], 404);
+            }
 
-        return response()->json(['message' => 'Cliente eliminado correctamente']);
+            return response()->json(['message' => 'Cliente eliminado correctamente']);
+
+        } catch (\Exception $e) {
+            return response()->json([
+                'message' => $e->getMessage()
+            ], 422);
+        }
     }
 
     public function updateById(Request $request, CustomerHandler $handler, $id)

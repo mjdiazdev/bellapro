@@ -70,10 +70,18 @@ class DistributionCenterController extends Controller
      */
     public function destroy(DistributionCenterHandler $handler, $id)
     {
-        if (!$handler->delete($id)) {
-            return response()->json(['message' => 'Centro no encontrado'], 404);
+        try {
+            if (!$handler->delete($id)) {
+                return response()->json(['message' => 'Centro de distribución no encontrado'], 404);
+            }
+
+            return response()->json(['message' => 'Centro de distribución eliminado correctamente']);
+
+        } catch (\Exception $e) {
+            return response()->json([
+                'message' => $e->getMessage()
+            ], 422);
         }
-        return response()->json(['message' => 'Centro eliminado correctamente']);
     }
 
     /**

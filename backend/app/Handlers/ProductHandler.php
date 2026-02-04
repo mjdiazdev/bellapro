@@ -190,6 +190,19 @@ class ProductHandler
      */
     public function delete(int $id): bool
     {
+        // 1. Buscamos el producto primero para poder inspeccionarlo
+        $product = $this->products->findById($id);
+
+        if (!$product) {
+            return false;
+        }
+
+        // 2. Validar si tiene pedidos
+        if ($product->orderItems()->exists()) {
+            throw new \Exception("No se puede eliminar el producto '{$product->name}' porque ya tiene ventas registradas.");
+        }
+
+        // 3. Si pasa la validación, procedemos a borrar
         return $this->products->delete($id);
     }
 

@@ -30,4 +30,9 @@ class DistributionCenterShippingMethod extends Model
     {
         return $this->belongsTo(ShippingMethod::class);
     }
+
+    public function orders(): \Illuminate\Database\Eloquent\Relations\HasMany
+    {
+        return $this->hasMany(Order::class, 'dist_center_shipping_method_id');
+    }
 }

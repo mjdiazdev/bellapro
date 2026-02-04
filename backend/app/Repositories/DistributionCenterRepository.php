@@ -41,12 +41,19 @@ class DistributionCenterRepository
     /**
      * Eliminar un centro.
      */
+    public function hasOrders(int $id): bool
+    {
+        // Verificamos si algún registro de la tabla pivote que pertenece a este centro
+        // tiene órdenes asociadas.
+        return \App\Models\DistributionCenterShippingMethod::where('distribution_center_id', $id)
+            ->whereHas('orders')
+            ->exists();
+    }
+
     public function delete(int $id): bool
     {
-        $center = DistributionCenter::find($id);
-        if (!$center) return false;
-
-        return (bool) $center->delete();
+        $center = $this->findById($id);
+        return $center ? (bool) $center->delete() : false;
     }
 
     /**

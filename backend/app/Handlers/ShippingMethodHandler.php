@@ -39,6 +39,15 @@ class ShippingMethodHandler
      */
     public function delete(int $id): bool
     {
+        $method = $this->shippingMethods->findById($id);
+
+        if (!$method) return false;
+
+        // Preguntamos al repositorio si hay pedidos (Lógica de BD encapsulada)
+        if ($this->shippingMethods->hasOrders($id)) {
+            throw new \Exception("No se puede eliminar el método '{$method->name}' porque tiene pedidos históricos asociados.");
+        }
+
         return $this->shippingMethods->delete($id);
     }
 

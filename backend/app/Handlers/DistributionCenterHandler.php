@@ -84,6 +84,15 @@ class DistributionCenterHandler
 
     public function delete(int $id): bool
     {
+        $center = $this->repository->findById($id);
+
+        if (!$center) return false;
+
+        // Regla de negocio: No eliminar si tiene historial de pedidos
+        if ($this->repository->hasOrders($id)) {
+            throw new \Exception("No se puede eliminar el centro '{$center->name}' porque tiene pedidos asociados en el historial.");
+        }
+
         return $this->repository->delete($id);
     }
 

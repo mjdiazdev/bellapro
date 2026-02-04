@@ -62,9 +62,7 @@ class CategoryRepository
     public function delete(int $id): bool
     {
         $category = $this->findById($id);
-        if (!$category) return false;
-
-        return (bool) $category->delete();
+        return $category ? (bool) $category->delete() : false;
     }
 
     /**

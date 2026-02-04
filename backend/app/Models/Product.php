@@ -32,6 +32,12 @@ class Product extends Model
         return $this->hasOne(ProductStock::class);
     }
 
+    public function orderItems(): \Illuminate\Database\Eloquent\Relations\HasMany
+    {
+        // Relacionamos con OrderItem para verificar si existen ventas de este producto
+        return $this->hasMany(OrderItem::class);
+    }
+
     /**
      * Accesor inteligente: Busca el archivo físico basado en la referencia.
      */

@@ -63,7 +63,7 @@ class OrderHandler
         foreach ($data['items'] as $item) {
             $product = $this->products->findById($item['product_id']);
             if (!$product || ($item['quantity'] > ($product->stock->stock ?? 0))) {
-                throw new \Exception("Stock insuficiente para el producto: " . ($product->name ?? 'ID '.$item['product_id']));
+                throw new \Exception("Stock insuficiente para el producto: " . ($product->name));
             }
         }
 
@@ -188,17 +188,28 @@ class OrderHandler
             // =======================
             // LÓGICA DE PAYPAL
             // =======================
+            $totalParaPaypal = number_format($totalFinal, 2, '.', '');
             if ($data['payment']['method'] === 'paypal') {
                 $paypalService = new PayPalService();
-                $paypalOrder = $paypalService->createOrder($totalFinal);
+                $paypalOrder = $paypalService->createOrder($totalParaPaypal);
+
+                // VALIDACIÓN CRÍTICA:
+                if (!isset($paypalOrder['id'])) {
+                    // Logueamos el error para que tú como dev sepas qué pasó realmente
+                    Log::error("Error de PayPal: ", (array)$paypalOrder);
+                    throw new \Exception('No se pudo conectar con PayPal. Por favor, intenta más tarde.');
+                }
 
                 $this->payments->updateStatus($order->id, 'pending', ['paypal_order_id' => $paypalOrder['id']]);
+
+                // Buscamos el link de aprobación de forma segura
+                $approveLink = collect($paypalOrder['links'])->firstWhere('rel', 'approve');
 
                 return [
                     'order_id' => $order->id,
                     'paypal' => [
                         'id' => $paypalOrder['id'],
-                        'approve_url' => collect($paypalOrder['links'])->firstWhere('rel', 'approve')['href']
+                        'approve_url' => $approveLink ? $approveLink['href'] : null
                     ]
                 ];
             }

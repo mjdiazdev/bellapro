@@ -21,6 +21,11 @@ class PayPalService
 
         $this->clientId = config('services.paypal.client_id');
         $this->secret = config('services.paypal.secret');
+
+        // DEBUG TEMPORAL: Si esto falla, es que config/services.php no está bien
+        if (!$this->clientId || !$this->secret) {
+            throw new \Exception("Faltan las credenciales de PayPal en la configuración.");
+        }
     }
 
     /**

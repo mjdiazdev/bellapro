@@ -89,6 +89,17 @@ class CategoryHandler
      */
     public function delete(int $id): bool
     {
+        $category = $this->categories->findById($id);
+
+        if (!$category) {
+            return false;
+        }
+
+        // REGLA DE NEGOCIO: ¿Tiene productos?
+        if ($category->products()->exists()) {
+            throw new \Exception("Esta categoría tiene productos asignados y no puede ser eliminada.");
+        }
+
         return $this->categories->delete($id);
     }
 
