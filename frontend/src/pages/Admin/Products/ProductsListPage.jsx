@@ -51,7 +51,7 @@ export default function ProductsListPage() {
     price: "", 
     description: "", 
     category_id: "", 
-    stock: 0,
+    stock: "",
     image_file: null 
   });
 

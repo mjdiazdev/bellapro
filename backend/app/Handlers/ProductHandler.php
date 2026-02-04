@@ -6,6 +6,7 @@ use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Validator;
 use App\Repositories\ProductRepository;
 use App\Repositories\CategoryRepository;
+use Illuminate\Support\Str;
 
 class ProductHandler
 {
@@ -33,16 +34,19 @@ class ProductHandler
         }
 
         return DB::transaction(function () use ($data) {
-            // 1. Manejo del archivo: Guardar con el nombre de la referencia
+            // 1. Manejo del archivo
             if (isset($data['image']) && $data['image'] instanceof \Illuminate\Http\UploadedFile) {
                 $extension = $data['image']->getClientOriginalExtension();
-                $fileName = $data['reference'] . '.' . $extension; // Ejemplo: 140070001.jpg
+                // Generamos el nombre basado en el producto (Slug)
+                $fileName = Str::upper(Str::slug($data['name'], '-')) . '.' . $extension;
 
-                // Guardamos en 'public/products' con el nombre manual
                 $data['image']->storeAs('products', $fileName, 'public');
+
+                // IMPORTANTE: Guardamos el nombre final en el array data
+                $data['image'] = $fileName;
             }
 
-            // Crear el producto con la ruta del archivo ya seteada
+            // Crear el producto
             $product = $this->products->create($data);
 
             // Crear stock inicial

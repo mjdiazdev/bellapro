@@ -1,6 +1,7 @@
 <?php
 
 namespace App\Models;
+use Illuminate\Support\Str;
 
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
@@ -13,7 +14,7 @@ class Product extends Model
 {
     // Campos permitidos para asignación masiva
     protected $fillable = [
-        'category_id', 'name', 'reference', 'price', 'description'
+        'category_id', 'name', 'reference', 'price', 'description','image'
     ];
 
     protected $appends = ['image_url'];
@@ -39,23 +40,15 @@ class Product extends Model
     }
 
     /**
-     * Accesor inteligente: Busca el archivo físico basado en la referencia.
+     * Accesor inteligente: Busca el archivo físico basado en el nombre del producto.
      */
-    public function getImageUrlAttribute()
-    {
-        if (!$this->reference) {
-            return asset('images/placeholder-product.png');
+    public function getImageUrlAttribute() {
+        // Si hay un nombre guardado en la BD y el archivo existe
+        if ($this->image && Storage::disk('public')->exists("products/{$this->image}")) {
+            return asset('storage/products/' . $this->image);
         }
 
-        $extensions = ['jpg', 'jpeg', 'png', 'webp'];
-
-        foreach ($extensions as $ext) {
-            $path = "products/{$this->reference}.{$ext}";
-            if (Storage::disk('public')->exists($path)) {
-                return asset('storage/' . $path);
-            }
-        }
-
+        // Fallback: Si no tiene imagen o no existe el archivo físico
         return asset('images/placeholder-product.png');
     }
 }

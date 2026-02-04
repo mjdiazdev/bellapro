@@ -34,51 +34,54 @@ class ProductsImport implements ToCollection, WithHeadingRow
     {
         foreach ($rows as $row)
         {
-            // Saltamos filas que no tengan referencia (identificador principal)
             if (!isset($row['referencia']) || empty($row['referencia'])) continue;
 
-            // Usamos transacciones para asegurar la integridad de los datos por cada fila
             DB::transaction(function () use ($row) {
-
-                // 1. GESTIÓN DE CATEGORÍA
-                // Buscamos por código. Si no existe, usamos el Handler para crearla con su QR.
-                $category = Category::where('code', $row['categoria'])->first();
+                // 1. GESTIÓN DE CATEGORÍA (Con cast a string para evitar errores)
+                $catCode = (string) $row['categoria'];
+                $category = Category::where('code', $catCode)->first();
 
                 if (!$category) {
                     $category = $this->categoryHandler->create([
-                        'name' => $row['categoria'],
-                        'code' => $row['categoria']
+                        'name' => "Categoría " . $catCode,
+                        'code' => $catCode
                     ]);
                 }
 
-                // 2. GESTIÓN DE PRODUCTO (UPSERT)
-                // Buscamos si el producto ya existe mediante su referencia única
-                $product = Product::where('reference', $row['referencia'])->first();
+                // 2. PREPARACIÓN DE DATOS
+                $nombreImagen = !empty($row['imagenes']) ? trim((string)$row['imagenes']) . '.jpg' : null;
 
                 $productData = [
                     'category_id' => $category->id,
-                    'name'        => $row['nombre'],
-                    'price'       => $row['precio'],
-                    'description' => $row['descripcion'] ?? null,
-                    // Nota: photo_url no se guarda aquí, se vincula por nombre de archivo (referencia)
+                    'name'        => (string) ($row['descripcion'] ?? $row['nombre'] ?? 'Sin nombre'),
+                    'price'       => floatval(str_replace(',', '.', $row['precio'])),
+                    'image'       => $nombreImagen,
                 ];
 
+                // 3. UPSERT DE PRODUCTO
+                $product = Product::where('reference', $row['referencia'])->first();
+
                 if ($product) {
-                    // Si existe: Actualizamos datos básicos y SUMAMOS la cantidad al stock existente
+                    // ACTUALIZACIÓN
                     $product->update($productData);
 
-                    $currentStock = $product->stock ? $product->stock->stock : 0;
-                    $product->stock()->update([
-                        'stock' => $currentStock + (int)$row['cantidad']
-                    ]);
+                    // IMPORTANTE: Usamos updateOrCreate para asegurar que el registro de stock existe
+                    $cantidadNueva = (int)($row['cantidad'] ?? 0);
+
+                    // Si quieres que SUME siempre:
+                    $stockActual = $product->stock ? $product->stock->stock : 0;
+                    $product->stock()->updateOrCreate(
+                        ['product_id' => $product->id],
+                        ['stock' => $stockActual + $cantidadNueva]
+                    );
                 } else {
-                    // Si no existe: Creamos el producto y asignamos el stock inicial
+                    // CREACIÓN
                     $productData['reference'] = $row['referencia'];
                     $newProduct = Product::create($productData);
 
                     $newProduct->stock()->create([
-                        'stock' => (int)$row['cantidad'],
-                        'min_stock' => 1 // Valor por defecto
+                        'stock' => (int)($row['cantidad'] ?? 0),
+                        'min_stock' => 1
                     ]);
                 }
             });

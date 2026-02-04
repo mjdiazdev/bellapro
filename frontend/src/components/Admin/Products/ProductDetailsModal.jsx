@@ -77,7 +77,7 @@ export default function ProductDetailsModal({ productId, onClose }) {
                 <p className="text-xs text-gray-400 flex items-center gap-1">
                   <Package size={12} /> Stock Disponible
                 </p>
-                <p className={`text-xl font-bold ${product.stock?.stock > 0 ? 'text-green-600' : 'text-red-500'}`}>
+                <p className={`text-xl font-bold ${product.stock?.stock > 0 ? 'text-pink-600' : 'text-red-500'}`}>
                   {product.stock?.stock ?? 0} unidades
                 </p>
               </div>
