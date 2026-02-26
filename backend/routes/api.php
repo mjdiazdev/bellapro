@@ -13,6 +13,7 @@ use App\Http\Controllers\Api\CustomerController;
 use App\Http\Controllers\Api\OrderController;
 use App\Http\Controllers\Api\DistributionCenterController;
 use App\Http\Controllers\Api\ImportController;
+use App\Http\Controllers\Api\DashboardController;
 
 /*
 |--------------------------------------------------------------------------
@@ -110,6 +111,16 @@ Route::middleware(['auth:sanctum', 'role:admin'])->group(function () {
      */
     Route::get('/orders', [OrderController::class, 'list']);
     Route::get('/orders/{id}', [OrderController::class, 'show']);
+
+    /**
+     * Rutas para el panel de administración
+     */
+    Route::prefix('dashboard')->group(function () {
+        Route::get('/stats', [DashboardController::class, 'index']);
+
+        // En el futuro, si quieres estadísticas por rangos:
+        // Route::get('/stats/range', [DashboardController::class, 'customRange']);
+    });
 });
 
 
