@@ -16,6 +16,7 @@ import DistributionCentersList from './pages/Admin/DistributionCenters/Distribut
 import Thanks from './pages/Client/Checkout/ThanksPage';
 import InfoPage from './pages/Client/Info/InfoPage';
 import NotFoundPage from './pages/NotFoundPage';
+import Dashboard from './pages/Admin/Dashboard/DashboardPage';
 
 function RequireAuth({children}) {
   const token = localStorage.getItem('token');
@@ -34,7 +35,7 @@ export default function App() {
 
           {/* ADMIN */}
           <Route path="/login" element={<Login/>} />
-          <Route path="/dashboard" element={<RequireAuth><Products/></RequireAuth>} />
+          <Route path="/admin/dashboard" element={<RequireAuth><Dashboard/></RequireAuth>} />
           <Route path="/admin/categories" element={<RequireAuth><Categories/></RequireAuth>} />
           <Route path="/admin/shipping-methods" element={<RequireAuth><ShippingMethods/></RequireAuth>} />
           <Route path="/admin/distribution-centers" element={<RequireAuth><DistributionCentersList/></RequireAuth>} />

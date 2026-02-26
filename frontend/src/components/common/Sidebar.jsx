@@ -4,7 +4,7 @@ import { LayoutDashboard, Layers, ShoppingBag, Users, Briefcase, Truck, Package,
 import { NavLink } from 'react-router-dom';
 
 const navigation = [
-  { name: 'Dashboard', icon: LayoutDashboard, path: '/admin/products' },
+  { name: 'Dashboard', icon: LayoutDashboard, path: '/admin/dashboard' },
   { name: 'Categorías', icon: Layers, path: '/admin/categories' },
   { name: 'Productos', icon: ShoppingBag, path: '/admin/products' },
   { name: 'Clientes', icon: Briefcase, path: '/admin/customers' },
