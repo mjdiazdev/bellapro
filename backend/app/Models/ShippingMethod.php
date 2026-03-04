@@ -8,7 +8,9 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 class ShippingMethod extends Model
 {
     protected $fillable = ['name','description','price'];
-
+    protected $casts = [
+        'status' => 'boolean',
+    ];
     /**
      * Obtener los centros de distribución asociados al método de envío.
      */

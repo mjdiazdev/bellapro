@@ -27,7 +27,11 @@ class ShippingMethodRepository
      */
     public function all(): array
     {
-        return ShippingMethod::all()->toArray();
+        // Solo devolvemos los registros donde status sea true (1)
+        return ShippingMethod::where('status', true)
+            ->orderBy('name', 'asc')
+            ->get()
+            ->toArray();
     }
 
     /**
@@ -50,7 +54,9 @@ class ShippingMethodRepository
         $method = $this->findById($id);
         if (!$method) return false;
 
-        return (bool) $method->delete();
+        // En lugar de $method->delete(), actualizamos el status
+        $method->status = false;
+        return (bool) $method->save();
     }
 
     /**

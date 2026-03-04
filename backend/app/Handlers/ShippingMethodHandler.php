@@ -41,13 +41,12 @@ class ShippingMethodHandler
     {
         $method = $this->shippingMethods->findById($id);
 
-        if (!$method) return false;
-
-        // Preguntamos al repositorio si hay pedidos (Lógica de BD encapsulada)
-        if ($this->shippingMethods->hasOrders($id)) {
-            throw new \Exception("No se puede eliminar el método '{$method->name}' porque tiene pedidos históricos asociados.");
+        if (!$method) {
+            throw new \Exception("El método de envío no existe.");
         }
 
+        // Ahora, independientemente de si tiene pedidos o no,
+        // el repositorio hará un "borrado lógico" (status = false)
         return $this->shippingMethods->delete($id);
     }
 

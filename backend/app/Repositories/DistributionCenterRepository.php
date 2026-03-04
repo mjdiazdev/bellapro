@@ -69,45 +69,37 @@ class DistributionCenterRepository
      */
     public function findNearestCenter(string $postalCode): ?DistributionCenter
     {
-        // 1. Obtener la ubicación geográfica de referencia basada en el CP proporcionado por el usuario
+        // 1. Obtener la ubicación geográfica de referencia
         $reference = \App\Models\PostalCode::with('city.province')
             ->where('code', $postalCode)
             ->first();
 
-        // Si el CP no existe en nuestra base de datos, retornamos el primer centro disponible por defecto
+        // Si el CP no existe, retornamos el primer centro con sus métodos ACTIVOS
         if (!$reference) {
-            return DistributionCenter::with('shippingMethods')->first();
+            return DistributionCenter::with(['shippingMethods' => function($query) {
+                $query->where('shipping_methods.status', true); // Filtro de activos
+            }])->first();
         }
 
-        // Variables de comparación para la consulta jerárquica
         $cityId = $reference->city_id;
         $provinceId = $reference->city->province_id;
-        $targetInt = (int) $postalCode; // Casteo a entero para cálculo de diferencia absoluta
+        $targetInt = (int) $postalCode;
 
         return DistributionCenter::join('postal_codes', 'distribution_centers.postal_code_id', '=', 'postal_codes.id')
             ->join('cities', 'postal_codes.city_id', '=', 'cities.id')
             ->select('distribution_centers.*')
-            // Cargamos shippingMethods incluyendo el ID de la tabla pivote (dist_center_shipping_method)
+            // CARGA CON FILTRO: Solo métodos de envío donde status sea true
             ->with(['shippingMethods' => function($query) {
-                $query->select('shipping_methods.*');
+                $query->where('shipping_methods.status', true);
             }])
             ->orderByRaw("
                 CASE
-                    /* Prioridad 1: Centros cuya ciudad coincida exactamente.
-                       Prioridad 2: Centros cuya provincia coincida.
-                       Prioridad 3: Cualquier otro centro (ordenado por cercanía numérica).
-                    */
                     WHEN cities.id = ? THEN 1
                     WHEN cities.province_id = ? THEN 2
                     ELSE 3
                 END ASC,
-                /* Criterio de desempate o aproximación final:
-                   Calculamos la diferencia absoluta entre los códigos postales.
-                   Ej: Si el cliente es 3004 y hay centros 3000 y 3030, ganará el 3000 (|3000-3004|=4).
-                */
                 ABS(CAST(postal_codes.code AS SIGNED) - ?) ASC
             ", [$cityId, $provinceId, $targetInt])
-            // Solo necesitamos el centro que mejor cumpla las condiciones anteriores
             ->first();
     }
 }
