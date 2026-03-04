@@ -1,54 +1,40 @@
-/**
- * Página: CustomersListPage
- * ========================
- * Página de administración de Clientes.
- * Utiliza hooks reutilizables:
- * - useCrud → CRUD para Clientes
- * - useModal → control de modales
- * - useForm → formulario controlado
- *
- * Componentes principales:
- * - Header / Sidebar / Footer → Layout
- * - CustomersList → Tabla de Clientes
- * - Modal / ConfirmModal / AlertModal → Modales
- */
+import { useState, useEffect } from "react";
 
-import { useState } from "react";
-
+// Layout & UI
 import Header from "../../../components/common/Header";
 import Sidebar from "../../../components/common/Sidebar";
 import Footer from "../../../components/common/Footer";
-
 import CustomersList from "../../../components/Admin/Customers/CustomersList";
 import ConfirmModal from "../../../components/common/ConfirmModal";
 import Modal from "../../../components/common/Modal";
 import AlertModal from "../../../components/common/AlertModal";
-
 import Button from "../../../components/common/variant/Button";
+import PaginationControls from "../../../components/common/PaginationControls";
 
+// Hooks
 import useCrud from "../../../hooks/useCrud";
 import useModal from "../../../hooks/useModal";
 import useForm from "../../../hooks/useForm";
 import { getAbsolute } from "../../../services/apiService";
 
-
 export default function CustomersListPage() {
-  // Endpoint del recurso
   const RESOURCE = "customers";
 
-  // Hook CRUD
-  const { items: customers, loadData, getItem, create, update, remove } = useCrud(RESOURCE);
+  // --- ESTADOS DE PAGINACIÓN ---
+  const [perPage, setPerPage] = useState(25);
+  const [currentPage, setCurrentPage] = useState(1);
 
-  // Hook CRUD para categorías (para el select)
-  const { items: postal } = useCrud("postalCodes");
-  const postalOptions = Array.isArray(postal?.data) ? postal.data : [];
+  /**
+   * 1. Hook CRUD:
+   * 'false' indica que la carga NO es automática (la manejamos con useEffect).
+   */
+  const { items: customersData, loadData, getItem, create, update, remove } = useCrud(RESOURCE, false); 
 
-  // Modales
+  // Modales y Alertas
   const confirmModal = useModal();
   const formModal = useModal();
   const alertModal = useModal();
 
-  // Formulario controlado
   const { data: formData, update: updateForm, setData: setFormData, reset: resetForm } =
     useForm({
       nif: "",
@@ -75,71 +61,66 @@ export default function CustomersListPage() {
   const [alertMessage, setAlertMessage] = useState("");
 
   /**
-   * === Crear Cliente ===
+   * 2. EFECTO DE CARGA:
+   * Se dispara cuando cambian los controles de paginación.
+   */
+  useEffect(() => {
+    loadData({ per_page: perPage, page: currentPage });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [perPage, currentPage]);
+
+  /**
+   * === LÓGICA DE FORMULARIO ===
    */
   const handleCreate = () => {
     setFormMode("create");
     resetForm();
+    setCities([]);
+    setPostalCodes([]);
     formModal.show();
   };
 
-  /**
-   * === Editar Cliente ===
-   * Carga los datos del Cliente en el formulario
-   */
-const handleEdit = async (id) => {
-  setFormMode("edit");
-  const response = await getItem(id);
-  const item = response.data;
+  const handleEdit = async (id) => {
+    setFormMode("edit");
+    const response = await getItem(id);
+    const item = response.data;
+    if (!item) return;
 
-  if (!item) return;
+    setFormData({
+      id: item.id,
+      nif: item.nif,
+      email: item.email,
+      name: item.name,
+      phone: item.phone,
+      address: item.address,
+      address_extra: item.address_extra,
+      province_id: item.postal_code?.city?.province?.id || "",
+      city_id: item.postal_code?.city?.id || "",
+      postal_code_id: item.postal_code?.id || ""
+    });
 
-  setFormData({
-    id: item.id,
-    nif: item.nif,
-    email: item.email,
-    name: item.name,
-    phone: item.phone,
-    address: item.address,
-    address_extra: item.address_extra,
-    province_id: item.postal_code?.city?.province?.id || "",
-    city_id: item.postal_code?.city?.id || "",
-    postal_code_id: item.postal_code?.id || ""
-  });
+    // Precarga de selects anidados
+    if(item.postal_code?.city?.province?.id){
+      const res = await getAbsolute(`/cities/province/${item.postal_code.city.province.id}`);
+      setCities(res.data || []);
+    }
+    if(item.postal_code?.city?.id){
+      const res = await getAbsolute(`/postal-codes/city/${item.postal_code.city.id}`);
+      setPostalCodes(res.data || []);
+    }
+    formModal.show();
+  };
 
-  // Cargar select de ciudades
-  if(item.postal_code?.city?.province?.id){
-    const citiesRes = await getAbsolute(`/cities/province/${item.postal_code.city.province.id}`);
-    setCities(citiesRes.data || []);
-  }
-
-  // Cargar select de códigos postales
-  if(item.postal_code?.city?.id){
-    const postalRes = await getAbsolute(`/postal-codes/city/${item.postal_code.city.id}`);
-    setPostalCodes(postalRes.data || []);
-  }
-
-  formModal.show();
-};
-
-
-  /**
-   * === Guardar Cliente ===
-   * Diferencia entre crear y actualizar
-   */
   const handleSubmit = async () => {
     try {
-      let res;
-      if (formMode === "create") {
-        res = await create(formData);
-      } else {
-        res = await update(formData.id, formData);
-      }
+      let res = (formMode === "create") ? await create(formData) : await update(formData.id, formData);
       setAlertType("success");
       setAlertMessage(res.message);
+      loadData({ per_page: perPage, page: currentPage }); // Refrescar lista
+      formModal.hide();
     } catch (error) {
       setAlertType("error");
-      setAlertMessage(error.response?.data?.message);
+      setAlertMessage(error.response?.data?.message || "Error al guardar");
     }
 
     formModal.hide();
@@ -147,67 +128,66 @@ const handleEdit = async (id) => {
     loadData();
   };
 
-  /**
-   * === Eliminar Cliente ===
-   */
-  const handleDeleteClick = (id) => {
-    setIdToDelete(id);
-    confirmModal.show();
-  };
-
   const confirmDelete = async () => {
     try {
       const res = await remove(idToDelete);
       setAlertType("success");
       setAlertMessage(res.message);
+      loadData({ per_page: perPage, page: currentPage });
     } catch (error) {
       setAlertType("error");
       setAlertMessage(error.response?.data?.message);
     }
-
     confirmModal.hide();
     alertModal.show();
-    loadData();
   };
 
   return (
-    <div className="flex flex-col min-h-screen overflow-x-hidden">
+    <div className="flex flex-col min-h-screen">
       <Header />
-
       <div className="flex flex-1">
         <Sidebar />
-
         <main className="flex-1 p-6 md:ml-64 bg-gray-50 overflow-y-auto">
           <div className="container mx-auto card p-6 bg-white rounded-xl shadow-lg">
+            
+            {/* Selector de cantidad (Arriba) */}
+            <PaginationControls 
+                perPage={perPage} 
+                setPerPage={setPerPage} 
+                setCurrentPage={setCurrentPage}
+                onlySelector={true} 
+            />
 
-            <h1 className="text-2xl font-bold text-gray-800 mb-6">Administración de Clientes</h1>
-
-            {/* Botones de acción */}
-            <div className="flex flex-col sm:flex-row justify-end gap-4 mb-6 width-80">
+            <div className="flex justify-between items-center mb-6">
+              <h1 className="text-2xl font-bold text-gray-800">Clientes</h1>
               <Button width="150px" onClick={handleCreate}>+ Nuevo Cliente</Button>
             </div>
 
-            {/* Tabla con scroll horizontal en móviles */}
             <div className="overflow-x-auto">
               <CustomersList
-                customers={Array.isArray(customers) ? customers : customers?.data || []}
+                customers={customersData?.data || []} // Acceso a data del paginador
                 onEdit={handleEdit}
-                onDelete={handleDeleteClick}
+                onDelete={(id) => { setIdToDelete(id); confirmModal.show(); }}
+              />
+              
+              {/* Navegación (Abajo) */}
+              <PaginationControls 
+                  currentPage={currentPage}
+                  lastPage={customersData?.last_page}
+                  setCurrentPage={setCurrentPage}
+                  from={customersData?.from}
+                  to={customersData?.to}
+                  total={customersData?.total}
               />
             </div>
-
           </div>
         </main>
       </div>
 
       <Footer />
 
-      {/* Modal formulario */}
-      <Modal
-        open={formModal.open}
-        title={formMode === "create" ? "Nuevo Cliente" : "Editar Cliente"}
-        onClose={formModal.hide}
-      >
+      {/* Modales se mantienen igual, solo asegúrate de que el select de provincias use provinces.data */}
+      <Modal open={formModal.open} title={formMode === "create" ? "Nuevo Cliente" : "Editar Cliente"} onClose={formModal.hide}>
         <div className="flex flex-col space-y-4">
           <input type="text" value={formData.nif} placeholder="NIF" className="border border-gray-300 rounded-lg p-3 focus:ring-pink focus:border-pink" onChange={e => updateForm("nif", e.target.value)} />
           <input type="text" value={formData.name} placeholder="Nombre" className="border border-gray-300 rounded-lg p-3 focus:ring-pink focus:border-pink" onChange={e => updateForm("name", e.target.value)} />
@@ -285,10 +265,7 @@ const handleEdit = async (id) => {
         </div>
       </Modal>
 
-      {/* Confirmación de eliminación */}
       <ConfirmModal open={confirmModal.open} onClose={confirmModal.hide} onConfirm={confirmDelete} message="¿Seguro deseas eliminar este Cliente?" />
-
-      {/* Modal de alerta */}
       <AlertModal open={alertModal.open} type={alertType} message={alertMessage} onClose={alertModal.hide} />
     </div>
   );

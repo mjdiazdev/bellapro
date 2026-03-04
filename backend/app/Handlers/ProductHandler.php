@@ -211,11 +211,11 @@ class ProductHandler
     }
 
     /**
-     * Listado general.
+     * Listado general con paginación dinámica.
      */
-    public function list(): array
+    public function list(int $perPage = 25)
     {
-        return $this->products->all();
+        return $this->products->all($perPage);
     }
 
     /**

@@ -139,11 +139,15 @@ class ProductController extends Controller
      * @param ProductHandler $handler
      * @return \Illuminate\Http\JsonResponse
      */
-    public function list(ProductHandler $handler)
+    public function list(Request $request, ProductHandler $handler)
     {
-        return response()->json([
-            'data' => $handler->list()
-        ]);
+        // Capturamos 'per_page' de la URL (ej: /api/products?per_page=50)
+        $perPage = $request->query('per_page', 25);
+
+        // El handler ahora devuelve un objeto LengthAwarePaginator
+        $paginatedData = $handler->list((int) $perPage);
+
+        return response()->json($paginatedData);
     }
 
     /**

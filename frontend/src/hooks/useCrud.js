@@ -12,7 +12,7 @@
  * simplemente pasando el "resource" (ej: "categories", "products", etc.)
  */
 
-import { useState, useEffect, useCallback } from "react"; // <-- Importamos useCallback
+import { useState, useEffect, useCallback } from "react";
 import {
   getAll,
   getById,
@@ -21,7 +21,7 @@ import {
   deleteItem
 } from "../services/apiService";
 
-export default function useCrud(resource) {
+export default function useCrud(resource, autoLoad = true) {
   // Estado donde se almacenan los registros del recurso
   const [items, setItems] = useState([]);
 
@@ -29,13 +29,12 @@ export default function useCrud(resource) {
    * Obtiene todos los registros del recurso
    * Usamos useCallback para estabilizar la función y usarla como dependencia.
    */
-  const loadData = useCallback(async () => {
+  const loadData = useCallback(async (params = {}) => {
     try {
-      const data = await getAll(resource);
-      setItems(data);
+      const response = await getAll(resource, params);
+      setItems(response);
     } catch (error) {
-      console.error(`Error loading data for resource ${resource}:`, error);
-      // Opcional: manejar el estado de error aquí
+      console.error(`Error loading ${resource}:`, error);
     }
   }, [resource]); // <-- resource es la única dependencia externa que podría cambiar
 
@@ -44,8 +43,10 @@ export default function useCrud(resource) {
    * Se ejecuta al montar el componente.
    */
   useEffect(() => {
-    loadData();
-  }, [loadData]); // <-- CORRECCIÓN: Agregamos loadData como dependencia para evitar el warning
+    if (autoLoad) {
+      loadData();
+    }
+  }, [loadData, autoLoad]);
 
   /**
    * Métodos CRUD expuestos

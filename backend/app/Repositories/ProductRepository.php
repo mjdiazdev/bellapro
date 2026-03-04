@@ -59,8 +59,9 @@ class ProductRepository
     /**
      * Listar todos los productos.
      */
-    public function all(): array
+    public function all(int $perPage = 25)
     {
-        return Product::with('category', 'stock')->get()->toArray();
+        // Usamos paginate para que Laravel gestione la metadata (total, current_page, etc.)
+        return Product::with(['category', 'stock'])->paginate($perPage);
     }
 }

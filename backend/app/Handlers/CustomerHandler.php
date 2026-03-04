@@ -58,9 +58,9 @@ class CustomerHandler
     /**
      * Listar todos los customers
      */
-    public function list(): array
+    public function list($perPage = 25)
     {
-        return $this->customers->all();
+        return $this->customers->all($perPage);
     }
 
     /**

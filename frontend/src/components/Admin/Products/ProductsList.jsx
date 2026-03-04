@@ -11,10 +11,10 @@ export default function ProductsList({ products, onEdit, onDelete, onLocalChange
       key: 'image_url', // Mantenemos el key pero cambiamos el render
       render: (p) => (
         <img 
-          src={p.image_url || 'https://via.placeholder.com/40'} 
+          src={p.image_url || 'https://yayasansapa.id/wp-content/uploads/2017/12/no-image-found-360x250.png'} 
           alt={p.name}
           className="w-10 h-10 object-cover rounded-md border border-gray-200"
-          onError={(e) => { e.target.src = 'https://via.placeholder.com/40'; }}
+          onError={(e) => { e.target.src = 'https://yayasansapa.id/wp-content/uploads/2017/12/no-image-found-360x250.png'; }}
         />
       )
     },
@@ -62,12 +62,12 @@ export default function ProductsList({ products, onEdit, onDelete, onLocalChange
     <div className="">
       <AdminTable 
         columns={columns}
-        data={products}
+        data={products} 
         onEdit={onEdit}
         onDelete={onDelete}
         onView={(p) => setSelectedProduct(p.id)}
-        isEditable={true} // Habilitamos el botón de Guardar Cambios
-        onSaveAll={onSaveAll} // Pasamos la función de guardado masivo
+        isEditable={true}
+        onSaveAll={onSaveAll}
       />
 
       {selectedProduct && (

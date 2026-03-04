@@ -48,11 +48,14 @@ class OrderController extends Controller
     /**
      * Listar todas las órdenes
      */
-    public function list(OrderHandler $handler)
+    public function list(Request $request, OrderHandler $handler)
     {
-        return response()->json([
-            'data' => $handler->list()
-        ]);
+        // Capturamos 'per_page' de la request, por defecto 25
+        $perPage = $request->query('per_page', 25);
+
+        return response()->json(
+            $handler->list($perPage)
+        );
     }
 
     /**

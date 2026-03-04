@@ -24,9 +24,11 @@ class CustomerController extends Controller
         }
     }
 
-    public function list(CustomerHandler $handler)
+    public function list(Request $request, CustomerHandler $handler)
     {
-        return response()->json(['data' => $handler->list()]);
+        $perPage = $request->query('per_page', 25);
+
+        return response()->json($handler->list($perPage));
     }
 
     public function show(CustomerHandler $handler, $email)

@@ -38,9 +38,9 @@ class CustomerRepository
     /**
      * Obtener todos los customers
      */
-    public function all(): array
+    public function all($perPage = 25)
     {
-        return Customer::all()->toArray();
+        return Customer::orderByDesc('id')->paginate($perPage);
     }
 
     /**

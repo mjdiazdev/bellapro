@@ -28,7 +28,7 @@ export default function Login() {
       }
 
       // Redirección
-      navigate('/dashboard');
+      navigate('/admin/dashboard');
     } catch (err) {
       // Manejo de error original potenciado
       setError(err.response?.data?.message || 'Error en las credenciales');

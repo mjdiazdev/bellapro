@@ -31,13 +31,15 @@ class OrderRepository
     /**
      * Obtener todas las órdenes con relaciones
      */
-    public function all()
+    public function all($perPage = 25)
     {
         return Order::with([
-            'customer',
-            'postalCode.city.province',
-            'distributionCenterMethod.shippingMethod',
-            'items.product'
-        ])->orderByDesc('id')->get();
+                'customer',
+                'postalCode.city.province',
+                'distributionCenterMethod.shippingMethod',
+                'items.product'
+            ])
+            ->orderByDesc('id')
+            ->paginate($perPage); // Cambiamos get() por paginate()
     }
 }

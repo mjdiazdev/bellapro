@@ -10,6 +10,7 @@ import ConfirmModal from "../../../components/common/ConfirmModal";
 import Modal from "../../../components/common/Modal";
 import AlertModal from "../../../components/common/AlertModal";
 import BulkImportButton from "../../../components/Admin/Products/BulkImportButton";
+import PaginationControls from "../../../components/common/PaginationControls";
 
 // Hooks & Services
 import useCrud from "../../../hooks/useCrud";
@@ -20,19 +21,36 @@ import { bulkUpdateItems } from "../../../services/apiService"; // Importar serv
 export default function ProductsListPage() {
   const RESOURCE = "products";
 
+  const [perPage, setPerPage] = useState(25);
+  const [currentPage, setCurrentPage] = useState(1);
+
   // 1. Hook CRUD: Obtenemos las funciones básicas
-  const { items: products, loadData, getItem, create, update, remove } = useCrud(RESOURCE);
+  const { 
+    items: products, 
+    loadData, 
+    getItem, 
+    create, 
+    update, 
+    remove 
+  } = useCrud(RESOURCE, false);
   
   // 2. Estado local para edición masiva: 
   // Esto permite que el usuario edite la tabla sin afectar la DB inmediatamente
   const [localProducts, setLocalProducts] = useState([]);
 
   // 3. Sincronizar estado local cuando los productos carguen desde el Backend
+  // EFECTO 1: Cargar datos del servidor cuando cambian los filtros/paginación
+  useEffect(() => {
+    // Solo disparamos la carga si cambian los valores de paginación
+    loadData({ per_page: perPage, page: currentPage });
+  }, [perPage, currentPage]);
+
+  // EFECTO 2: Sincronizar productos del servidor al estado local
   useEffect(() => {
     if (products?.data) {
       setLocalProducts(products.data);
     }
-  }, [products]);
+  }, [products?.data]); // Escuchamos específicamente al array de datos, no al objeto completo
 
   // Hook para categorías (select del modal)
   const { items: categories } = useCrud("categories");
@@ -213,9 +231,14 @@ export default function ProductsListPage() {
 
         <main className="flex-1 p-6 md:ml-64 bg-gray-50 overflow-y-auto">
           <div className="container mx-auto card p-6 bg-white rounded-xl shadow-lg">
-            
-            <h1 className="text-2xl font-bold text-gray-800 mb-6">Administración de Productos</h1>
 
+            <h1 className="text-2xl font-bold text-gray-800 mb-6">Administración de Productos</h1>
+            <PaginationControls 
+                perPage={perPage} 
+                setPerPage={setPerPage} 
+                setCurrentPage={setCurrentPage}
+                onlySelector={true} // Podrías pasarle un prop para mostrar solo el select
+            />
             {/* Botones de acción principales */}
             <div className="flex flex-col sm:flex-row justify-end gap-4 mb-6">
               <BulkImportButton 
@@ -237,6 +260,14 @@ export default function ProductsListPage() {
                   onDelete={handleDeleteClick}
                   onLocalChange={handleLocalChange}
                   onSaveAll={handleBulkSave}
+                />
+                <PaginationControls 
+                    currentPage={currentPage}
+                    lastPage={products?.last_page}
+                    setCurrentPage={setCurrentPage}
+                    from={products?.from}
+                    to={products?.to}
+                    total={products?.total}
                 />
             </div>
           </div>
