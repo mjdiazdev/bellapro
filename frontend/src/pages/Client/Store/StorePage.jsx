@@ -7,6 +7,7 @@ import { Search } from "lucide-react";
 import { useSearchParams, useNavigate } from "react-router-dom";
 import { getQrData } from "../../../services/apiService";
 import { useCart } from "../../../context/CartContext";
+import Modal from '../../../components/common/Modal';
 
 export default function StorePage() {
   const [catalogProducts, setCatalogProducts] = useState([]); // productos de la categoría actual
@@ -36,7 +37,8 @@ export default function StorePage() {
         name: p.name,
         reference: p.reference,
         price: Number(p.price),
-        image: p.image_url
+        image: p.image_url,
+        stock: p.stock ? p.stock.stock : 0
       }));
 
         // Solo cargamos el catálogo de la categoría actual
@@ -75,6 +77,12 @@ export default function StorePage() {
   const subtotal = cartProducts.reduce((sum, p) => sum + p.price * p.quantity, 0);
   const total = subtotal;
 
+  const [stockModal, setStockModal] = useState({ open: false, title: '', message: '' });
+
+  const handleStockAlert = (title, message) => {
+    setStockModal({ open: true, title, message });
+  };
+
   return (
     <div className="min-h-screen bg-pink-50 font-sans">
       {/* Header ahora no recibe props de carrito, todo se maneja desde CartContext */}
@@ -108,21 +116,24 @@ export default function StorePage() {
                   {category && <h2 className="text-xl font-bold text-gray-800 mb-4">{category.name}</h2>}
 
                   {catalogProducts.map(product => {
+                    // 1. Buscamos si este producto ya está en el carrito para saber su cantidad
                     const cartProduct = cartProducts.find(p => p.id === product.id);
-                    const isMatch = searchTerm !== "" && (
-                      product.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                      product.reference.toLowerCase().includes(searchTerm.toLowerCase())
-                    );
+                    const currentQuantity = cartProduct?.quantity || 0;
 
                     return (
                       <ProductItem
                         key={product.id}
                         id={`product-${product.id}`}
-                        isMatch={isMatch}
+                        onStockAlert={handleStockAlert}
+                        // Pasamos el producto combinado con su cantidad actual en el carro
                         product={{
                           ...product,
-                          quantity: cartProduct?.quantity || 0
+                          quantity: currentQuantity
                         }}
+                        isMatch={searchTerm !== "" && (
+                          product.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                          product.reference.toLowerCase().includes(searchTerm.toLowerCase())
+                        )}
                         onAdd={() => addToCart(product)}
                         onRemove={() => removeFromCart(product.id)}
                       />
@@ -145,7 +156,16 @@ export default function StorePage() {
           </div>
         </div>
       </div>
-
+      {/* MODAL GLOBAL - Siempre al final del componente principal */}
+      <Modal 
+        open={stockModal.open} 
+        title={stockModal.title} 
+        onClose={() => setStockModal({ ...stockModal, open: false })}
+      >
+        <div className="text-gray-600">
+          <p>{stockModal.message}</p>
+        </div>
+      </Modal>
       <Footer />
     </div>
   );

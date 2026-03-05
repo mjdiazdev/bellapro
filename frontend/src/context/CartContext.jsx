@@ -18,11 +18,17 @@ export function CartProvider({ children }) {
     setCartProducts(prev => {
       const existing = prev.find(p => p.id === product.id);
       if (existing) {
+        // Importante: mantenemos el stock que ya venía en el objeto
         return prev.map(p => 
           p.id === product.id ? { ...p, quantity: p.quantity + 1 } : p
         );
       }
-      return [...prev, { ...product, quantity: 1 }];
+      // Al añadir por primera vez, nos aseguramos de capturar el stock
+      return [...prev, { 
+        ...product, 
+        quantity: 1, 
+        stock: product.stock 
+      }];
     });
   };
 
@@ -34,7 +40,7 @@ export function CartProvider({ children }) {
     );
   };
 
-  // 🔹 Nuevo método para vaciar el carrito
+  // Nuevo método para vaciar el carrito
   const clearCart = () => setCartProducts([]);
 
   return (

@@ -40,7 +40,7 @@ class CategoryRepository
 
         return [
             'category' => $category,
-            'products' => $category->products()->get(),
+            'products' => $category->products()->with('stock')->get(),
         ];
     }
 
