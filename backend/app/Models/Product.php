@@ -14,7 +14,7 @@ class Product extends Model
 {
     // Campos permitidos para asignación masiva
     protected $fillable = [
-        'category_id', 'name', 'reference', 'price', 'description','image'
+        'category_id', 'name', 'reference', 'price', 'description','image', 'status'
     ];
 
     protected $appends = ['image_url'];

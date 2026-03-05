@@ -107,7 +107,8 @@ export default function ProductsListPage() {
         items: localProducts.map(p => ({
           id: p.id,
           price: p.price,
-          stock: p.stock?.stock ?? 0
+          stock: p.stock?.stock ?? 0,
+          status: p.status ?? true
         }))
       };
 
@@ -147,7 +148,8 @@ export default function ProductsListPage() {
       description: item.description,
       photo_url: item.photo_url,
       category_id: item.category_id,
-      stock: item.stock ? item.stock.stock : 0
+      stock: item.stock ? item.stock.stock : 0,
+      status: item.status,
     });
     formModal.show();
   };

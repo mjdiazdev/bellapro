@@ -40,7 +40,10 @@ class CategoryRepository
 
         return [
             'category' => $category,
-            'products' => $category->products()->with('stock')->get(),
+            'products' => $category->products()
+                ->where('status', true) // <--- Filtramos solo los activos
+                ->with('stock')
+                ->get(),
         ];
     }
 

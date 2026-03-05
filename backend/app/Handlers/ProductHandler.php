@@ -155,28 +155,27 @@ class ProductHandler
             throw new \Exception("No hay datos para actualizar.");
         }
 
-        // 1. Validar la estructura general del array
         $validator = Validator::make(['items' => $items], [
             'items' => 'required|array',
             'items.*.id' => 'required|integer|exists:products,id',
             'items.*.price' => 'required|numeric|min:0',
             'items.*.stock' => 'required|integer|min:0',
+            'items.*.status' => 'required|boolean', // <--- Nueva validación
         ]);
 
         if ($validator->fails()) {
             throw new \Exception($validator->errors()->first());
         }
 
-        // 2. Ejecutar la operación atómica
         return DB::transaction(function () use ($items) {
             foreach ($items as $item) {
-                // Actualizamos el precio en la tabla products
+                // 1. Actualizamos precio Y status en la tabla products
                 $this->products->update($item['id'], [
-                    'price' => $item['price']
+                    'price'  => $item['price'],
+                    'status' => $item['status'] // <--- Persistimos el nuevo estatus
                 ]);
 
-                // Actualizamos la cantidad en la tabla product_stocks
-                // Buscamos el producto para acceder a su relación
+                // 2. Actualizamos el stock
                 $product = $this->products->findById($item['id']);
                 if ($product) {
                     $product->stock()->update([

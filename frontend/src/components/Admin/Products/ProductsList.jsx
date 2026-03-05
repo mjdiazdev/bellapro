@@ -8,7 +8,7 @@ export default function ProductsList({ products, onEdit, onDelete, onLocalChange
   const columns = [
     {
       header: 'Imagen',
-      key: 'image_url', // Mantenemos el key pero cambiamos el render
+      key: 'image_url',
       render: (p) => (
         <img 
           src={p.image_url || 'https://yayasansapa.id/wp-content/uploads/2017/12/no-image-found-360x250.png'} 
@@ -20,6 +20,7 @@ export default function ProductsList({ products, onEdit, onDelete, onLocalChange
     },
     { header: 'Referencia', key: 'reference' },
     { header: 'Nombre', key: 'name' },
+    
     // --- COLUMNA PRECIO EDITABLE ---
     { 
       header: 'Precio (€)', 
@@ -34,6 +35,7 @@ export default function ProductsList({ products, onEdit, onDelete, onLocalChange
         />
       )
     },
+
     // --- COLUMNA STOCK EDITABLE ---
     { 
       header: 'Stock Actual', 
@@ -47,6 +49,26 @@ export default function ProductsList({ products, onEdit, onDelete, onLocalChange
         />
       )
     },
+
+    // --- NUEVA COLUMNA STATUS (CHECKBOX) ---
+    {
+      header: 'Estado',
+      key: 'status',
+      render: (p) => (
+        <div className="flex items-center space-x-2">
+          <input 
+            type="checkbox"
+            checked={Boolean(p.status)}
+            className="w-5 h-5 accent-pink cursor-pointer"
+            onChange={(e) => onLocalChange(p.id, 'status', e.target.checked)}
+          />
+          <span className={`text-[10px] font-bold uppercase ${p.status ? 'text-green-600' : 'text-red-500'}`}>
+            {p.status ? 'Activo' : 'Inactivo'}
+          </span>
+        </div>
+      )
+    },
+
     { 
       header: 'Categoría', 
       key: 'category',
