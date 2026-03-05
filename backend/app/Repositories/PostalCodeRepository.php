@@ -27,4 +27,12 @@ class PostalCodeRepository
     {
         return PostalCode::find($id);
     }
+
+    public function findByCodeWithLocation(string $code): ?PostalCode
+    {
+        // Usamos eager loading para traer la ciudad y la provincia en una sola consulta
+        return PostalCode::where('code', $code)
+            ->with(['city.province'])
+            ->first();
+    }
 }

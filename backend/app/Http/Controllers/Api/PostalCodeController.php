@@ -31,4 +31,18 @@ class PostalCodeController extends Controller
 
         return response()->json(['data' => $postalCodes]);
     }
+
+    /**
+     * Buscar datos de localización por el código postal string (Ej: 08001)
+     */
+    public function search(PostalCodeHandler $handler, $code)
+    {
+        $postalCode = $handler->searchByCode($code);
+
+        if (!$postalCode) {
+            return response()->json(['message' => 'Código postal no encontrado'], 404);
+        }
+
+        return response()->json(['data' => $postalCode]);
+    }
 }

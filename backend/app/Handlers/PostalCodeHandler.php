@@ -19,4 +19,9 @@ class PostalCodeHandler
     {
         return $this->postalCodes->PostalCodesByCity($cityId);
     }
+
+    public function searchByCode(string $code)
+    {
+        return $this->postalCodes->findByCodeWithLocation($code);
+    }
 }

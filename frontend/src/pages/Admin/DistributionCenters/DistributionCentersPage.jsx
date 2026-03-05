@@ -26,27 +26,29 @@ export default function DistributionCentersPage() {
 
   // Datos Geográficos y Métodos de Envío
   const { items: provinces } = useCrud("provinces");
-  const { items: shippingMethods } = useCrud("shippingMethods"); // Cargamos métodos disponibles
+  const { items: shippingMethods } = useCrud("shippingMethods"); 
   const availableMethods = Array.isArray(shippingMethods?.data) ? shippingMethods.data : [];
 
   const [cities, setCities] = useState([]);
   const [postalCodes, setPostalCodes] = useState([]);
+  const [isLoadingCP, setIsLoadingCP] = useState(false); // Para feedback visual en el CP
 
   // Modales
   const confirmModal = useModal();
   const formModal = useModal();
   const alertModal = useModal();
 
-  // Formulario - Añadimos shipping_methods como array vacío
+  // Formulario
   const { data: formData, update: updateForm, setData: setFormData, reset: resetForm } = useForm({
     name: "",
     email: "",
     phone: "",
     address: "",
+    postal_code: "", // String para el input
     province_id: "",
     city_id: "",
     postal_code_id: "",
-    shipping_methods: [] // Nuevo campo para la relación muchos a muchos
+    shipping_methods: [] 
   });
 
   const [formMode, setFormMode] = useState("create");
@@ -56,7 +58,40 @@ export default function DistributionCentersPage() {
 
   /** === Acciones === */
 
-  // Función para manejar el toggle de los checkboxes
+  // Lógica de Autocompletado por CP
+  const handlePostalCodeChange = async (e) => {
+    const cpValue = e.target.value;
+    updateForm("postal_code", cpValue);
+
+    if (cpValue.length === 5) {
+      setIsLoadingCP(true);
+      try {
+        const res = await getAbsolute(`/postal-codes/search/${cpValue}`);
+        const data = res.data;
+
+        if (data && data.city) {
+          const pId = data.city.province?.id || data.city.province_id;
+          
+          // Cargar ciudades de la provincia encontrada para que el select no esté vacío
+          const citiesRes = await getAbsolute(`/cities/province/${pId}`);
+          setCities(citiesRes.data || []);
+
+          setFormData(prev => ({
+            ...prev,
+            postal_code: cpValue,
+            postal_code_id: data.id,
+            province_id: pId,
+            city_id: data.city.id
+          }));
+        }
+      } catch (error) {
+        console.error("No se encontró información para este CP");
+      } finally {
+        setIsLoadingCP(false);
+      }
+    }
+  };
+
   const handleMethodToggle = (methodId) => {
     const currentSelected = formData.shipping_methods || [];
     const updated = currentSelected.includes(methodId)
@@ -81,30 +116,24 @@ export default function DistributionCentersPage() {
 
     if (!item) return;
 
-    // Sincronizar formulario con datos anidados del backend
     setFormData({
       id: item.id,
       name: item.name,
       email: item.email,
       phone: item.phone,
       address: item.address,
+      postal_code: item.postal_code?.code || "",
       province_id: item.postal_code?.city?.province?.id || "",
       city_id: item.postal_code?.city?.id || "",
       postal_code_id: item.postal_code?.id || "",
-      // Mapeamos los IDs de los métodos ya asociados
       shipping_methods: item.shipping_methods?.map(m => m.id) || [] 
     });
 
-    // Cargar selectores dependientes
     if (item.postal_code?.city?.province?.id) {
       const citiesRes = await getAbsolute(`/cities/province/${item.postal_code.city.province.id}`);
       setCities(citiesRes.data || []);
     }
-    if (item.postal_code?.city?.id) {
-      const postalRes = await getAbsolute(`/postal-codes/city/${item.postal_code.city.id}`);
-      setPostalCodes(postalRes.data || []);
-    }
-
+    
     formModal.show();
   };
 
@@ -136,10 +165,10 @@ export default function DistributionCentersPage() {
     try {
       const res = await remove(idToDelete);
       setAlertType("success");
-      setAlertMessage(res.message);
+      setAlertMessage(res.message || "Eliminado correctamente");
     } catch (error) {
       setAlertType("error");
-      setAlertMessage(error.response?.data?.message);
+      setAlertMessage(error.response?.data?.message || "Error al eliminar");
     }
     confirmModal.hide();
     alertModal.show();
@@ -183,57 +212,34 @@ export default function DistributionCentersPage() {
           <input type="text" placeholder="Teléfono" value={formData.phone} className="border p-3 rounded-lg" onChange={e => updateForm("phone", e.target.value)} />
           <input type="text" placeholder="Dirección" value={formData.address} className="border p-3 rounded-lg" onChange={e => updateForm("address", e.target.value)} />
 
-          {/* Selectores Jerárquicos */}
+          {/* Nuevo Input de CP con Autocompletado */}
+          <input 
+            type="text" 
+            placeholder="Código Postal (Ej: 08001)" 
+            value={formData.postal_code} 
+            className={`border p-3 rounded-lg ${isLoadingCP ? 'animate-pulse border-pink-300' : ''}`}
+            onChange={handlePostalCodeChange} 
+          />
+
           <select
             value={formData.province_id}
-            className="border p-3 rounded-lg"
-            onChange={async (e) => {
-              const pId = e.target.value;
-              updateForm("province_id", pId);
-              updateForm("city_id", "");
-              updateForm("postal_code_id", "");
-              setCities([]);
-              setPostalCodes([]);
-              if (pId) {
-                const res = await getAbsolute(`/cities/province/${pId}`);
-                setCities(res.data || []);
-              }
-            }}
+            disabled
+            className="border p-3 rounded-lg bg-gray-50 text-gray-500"
           >
-            <option value="">Seleccione Provincia</option>
+            <option value="">Provincia (se carga por CP)</option>
             {provinces?.data?.map(p => <option key={p.id} value={p.id}>{p.name}</option>)}
           </select>
 
           <select
             value={formData.city_id}
-            disabled={!formData.province_id}
-            className="border p-3 rounded-lg"
-            onChange={async (e) => {
-              const cId = e.target.value;
-              updateForm("city_id", cId);
-              updateForm("postal_code_id", "");
-              setPostalCodes([]);
-              if (cId) {
-                const res = await getAbsolute(`/postal-codes/city/${cId}`);
-                setPostalCodes(res.data || []);
-              }
-            }}
+            disabled
+            className="border p-3 rounded-lg bg-gray-50 text-gray-500"
           >
-            <option value="">Seleccione Ciudad</option>
+            <option value="">Ciudad (se carga por CP)</option>
             {cities.map(c => <option key={c.id} value={c.id}>{c.name}</option>)}
           </select>
 
-          <select
-            value={formData.postal_code_id}
-            disabled={!formData.city_id}
-            className="border p-3 rounded-lg"
-            onChange={e => updateForm("postal_code_id", e.target.value)}
-          >
-            <option value="">Seleccione C.P.</option>
-            {postalCodes.map(p => <option key={p.id} value={p.id}>{p.code}</option>)}
-          </select>
-
-          {/* NUEVO: Selección de Métodos de Envío (Checkbox Group) */}
+          {/* Selección de Métodos de Envío */}
           <div className="border p-4 rounded-lg bg-gray-50">
             <p className="text-sm font-bold text-gray-700 mb-2">Métodos de Envío Disponibles:</p>
             <div className="grid grid-cols-2 gap-2">
@@ -249,9 +255,6 @@ export default function DistributionCentersPage() {
                 </label>
               ))}
             </div>
-            {availableMethods.length === 0 && (
-              <p className="text-xs text-gray-400 italic">No hay métodos de envío registrados.</p>
-            )}
           </div>
 
           <Button onClick={handleSubmit}>Guardar Centro</Button>

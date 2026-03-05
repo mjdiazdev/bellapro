@@ -31,6 +31,9 @@ Route::post('orders/{orderId}/capture-paypal', [OrderController::class, 'capture
 // Rutas para autenticación
 Route::post('login', [AuthController::class, 'login']);
 
+// Buscar datos de localización por el código postal
+Route::get('postal-codes/search/{code}', [PostalCodeController::class, 'search']);
+
 // Rutas para provincias
 Route::prefix('provinces')->group(function () {
     Route::get('/', [ProvinceController::class, 'list']);
