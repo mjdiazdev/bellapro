@@ -124,6 +124,9 @@ Route::middleware(['auth:sanctum', 'role:admin'])->group(function () {
         // En el futuro, si quieres estadísticas por rangos:
         // Route::get('/stats/range', [DashboardController::class, 'customRange']);
     });
+
+    // Filtrar usuarios por rol
+    Route::get('users/role/{roleName}', [UserController::class, 'getUsersByRole']);
 });
 
 

@@ -78,4 +78,23 @@ class UserController extends Controller
         $user->delete();
         return response()->json(['message' => 'Usuario eliminado correctamente']);
     }
+
+    /**
+     * Filtrar usuarios por un nombre de rol específico.
+     */
+    public function getUsersByRole($roleName)
+    {
+        // Usamos el scope 'role' que proporciona Spatie para filtrar
+        $users = User::role($roleName)->get();
+
+        // Mantenemos tu lógica de adjuntar el ID del rol para el frontend
+        $users->each(function ($u) {
+            $u->role = $u->roles->first()->id ?? null;
+        });
+
+        return response()->json([
+            'status' => 'success',
+            'data'   => $users
+        ]);
+    }
 }

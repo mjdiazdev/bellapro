@@ -14,7 +14,24 @@ class DistributionCenterRepository
      */
     public function create(array $data): DistributionCenter
     {
-        return DistributionCenter::create($data);
+        // Creamos el centro con los datos básicos
+        $center = DistributionCenter::create([
+            'name'  => $data['name'],
+            'email' => $data['email'],
+            'phone' => $data['phone'],
+            'user_id' => $data['user_id'],
+        ]);
+
+        // Guardamos las múltiples ubicaciones
+        if (isset($data['locations']) && is_array($data['locations'])) {
+            foreach ($data['locations'] as $location) {
+                $center->locations()->create([
+                    'postal_code_id' => $location['postal_code_id'],
+                    'address'        => $location['address']
+                ]);
+            }
+        }
+        return $center;
     }
 
     /**
@@ -22,8 +39,11 @@ class DistributionCenterRepository
      */
     public function findById(int $id): ?DistributionCenter
     {
-        // Cargamos shippingMethods para que el frontend sepa cuáles están activos
-        return DistributionCenter::with(['postalCode.city.province', 'shippingMethods'])->find($id);
+        // Cambiamos 'postalCode' por 'locations.postalCode.city.province'
+        return DistributionCenter::with([
+            'locations.postalCode.city.province',
+            'shippingMethods'
+        ])->find($id);
     }
 
     /**
@@ -34,7 +54,25 @@ class DistributionCenterRepository
         $center = DistributionCenter::find($id);
         if (!$center) return null;
 
-        $center->update($data);
+        // Actualizar datos básicos (Nombre, Email, Teléfono)
+        $center->update([
+            'name'  => $data['name'] ?? $center->name,
+            'email' => $data['email'] ?? $center->email,
+            'phone' => $data['phone'] ?? $center->phone,
+            'user_id' => $data['user_id'] ?? $center->user_id,
+        ]);
+
+        // Sincronizar ubicaciones: eliminamos las actuales y creamos las nuevas
+        if (isset($data['locations']) && is_array($data['locations'])) {
+            $center->locations()->delete();
+            foreach ($data['locations'] as $location) {
+                $center->locations()->create([
+                    'postal_code_id' => $location['postal_code_id'],
+                    'address'        => $location['address']
+                ]);
+            }
+        }
+
         return $center;
     }
 
@@ -61,7 +99,11 @@ class DistributionCenterRepository
      */
     public function all(): array
     {
-        return DistributionCenter::with(['postalCode.city.province', 'shippingMethods'])->get()->toArray();
+        return DistributionCenter::with([
+            'coordinator', // <--- Agregamos esto para los datos del encargado
+            'locations.postalCode.city.province',
+            'shippingMethods'
+        ])->get()->toArray();
     }
 
     /**
@@ -69,15 +111,15 @@ class DistributionCenterRepository
      */
     public function findNearestCenter(string $postalCode): ?DistributionCenter
     {
-        // 1. Obtener la ubicación geográfica de referencia
+        // 1. Obtener la ubicación geográfica de referencia (el CP que mete el cliente)
         $reference = \App\Models\PostalCode::with('city.province')
             ->where('code', $postalCode)
             ->first();
 
-        // Si el CP no existe, retornamos el primer centro con sus métodos ACTIVOS
+        // Si el CP no existe en nuestra DB, retornamos el primer centro por defecto
         if (!$reference) {
             return DistributionCenter::with(['shippingMethods' => function($query) {
-                $query->where('shipping_methods.status', true); // Filtro de activos
+                $query->where('shipping_methods.status', true);
             }])->first();
         }
 
@@ -85,21 +127,27 @@ class DistributionCenterRepository
         $provinceId = $reference->city->province_id;
         $targetInt = (int) $postalCode;
 
-        return DistributionCenter::join('postal_codes', 'distribution_centers.postal_code_id', '=', 'postal_codes.id')
+        return DistributionCenter::select('distribution_centers.*')
+            // Unimos con la nueva tabla de ubicaciones
+            ->join('distribution_center_locations', 'distribution_centers.id', '=', 'distribution_center_locations.distribution_center_id')
+            ->join('postal_codes', 'distribution_center_locations.postal_code_id', '=', 'postal_codes.id')
             ->join('cities', 'postal_codes.city_id', '=', 'cities.id')
-            ->select('distribution_centers.*')
-            // CARGA CON FILTRO: Solo métodos de envío donde status sea true
             ->with(['shippingMethods' => function($query) {
                 $query->where('shipping_methods.status', true);
             }])
             ->orderByRaw("
                 CASE
-                    WHEN cities.id = ? THEN 1
-                    WHEN cities.province_id = ? THEN 2
-                    ELSE 3
+                    -- Prioridad 1: El centro tiene EXACTAMENTE este CP asignado
+                    WHEN postal_codes.code = ? THEN 1
+                    -- Prioridad 2: El centro tiene ubicaciones en la misma CIUDAD
+                    WHEN cities.id = ? THEN 2
+                    -- Prioridad 3: El centro tiene ubicaciones en la misma PROVINCIA
+                    WHEN cities.province_id = ? THEN 3
+                    ELSE 4
                 END ASC,
+                -- Desempate por cercanía numérica de CP
                 ABS(CAST(postal_codes.code AS SIGNED) - ?) ASC
-            ", [$cityId, $provinceId, $targetInt])
+            ", [$postalCode, $cityId, $provinceId, $targetInt])
             ->first();
     }
 }

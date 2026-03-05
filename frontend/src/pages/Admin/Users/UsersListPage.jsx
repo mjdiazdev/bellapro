@@ -217,6 +217,7 @@ export default function UsersListPage() {
           >
             <option value={1}>Administrador</option>
             <option value={2}>Usuario</option>
+            <option value={3}>Coordinador</option>
           </select>
 
           {/* Botón Guardar */}

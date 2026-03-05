@@ -22,4 +22,9 @@ class User extends Authenticatable
     protected $hidden = [
         'password',
     ];
+
+    public function distributionCenters()
+    {
+        return $this->hasMany(DistributionCenter::class, 'user_id');
+    }
 }

@@ -18,11 +18,14 @@ class DistributionCenterHandler
     public function create(array $data)
     {
         $validator = Validator::make($data, [
-            'name'           => 'required|string|max:255',
-            'email'          => 'required|email|unique:distribution_centers,email',
-            'phone'          => 'required|string|max:20',
-            'address'        => 'required|string|max:255',
-            'postal_code_id' => 'required|integer|exists:postal_codes,id'
+            'name'                       => 'required|string|max:255',
+            'email'                      => 'required|email|unique:distribution_centers,email',
+            'phone'                      => 'required|string|max:20',
+            'shipping_methods'           => 'required|array',
+            'locations'                  => 'required|array|min:1',
+            'locations.*.postal_code_id' => 'required|integer|exists:postal_codes,id',
+            'locations.*.address'        => 'required|string|max:255',
+            'user_id' => 'required|exists:users,id',
         ]);
 
         if ($validator->fails()) {
@@ -32,12 +35,13 @@ class DistributionCenterHandler
         return DB::transaction(function () use ($data) {
             $center = $this->repository->create($data);
 
-            // Asociar métodos de envío si vienen en el request
-            if (isset($data['shipping_methods']) && is_array($data['shipping_methods'])) {
+            // Asociar métodos de envío
+            if (isset($data['shipping_methods'])) {
                 $center->shippingMethods()->sync($data['shipping_methods']);
             }
 
-            return $center->load('shippingMethods');
+            // Cargamos las relaciones para retornar el objeto completo al frontend
+            return $center->load(['shippingMethods', 'locations.postalCode.city.province']);
         });
     }
 
@@ -47,11 +51,14 @@ class DistributionCenterHandler
     public function update(int $id, array $data)
     {
         $validator = Validator::make($data, [
-            'name'           => 'sometimes|string|max:255',
-            'email'          => "sometimes|email|unique:distribution_centers,email,$id",
-            'phone'          => 'sometimes|string|max:20',
-            'address'        => 'sometimes|string|max:255',
-            'postal_code_id' => 'sometimes|integer|exists:postal_codes,id'
+            'name'                       => 'sometimes|string|max:255',
+            'email'                      => "sometimes|email|unique:distribution_centers,email,$id",
+            'phone'                      => 'sometimes|string|max:20',
+            'shipping_methods'           => 'sometimes|array',
+            'locations'                  => 'sometimes|array|min:1',
+            'locations.*.postal_code_id' => 'required_with:locations|integer|exists:postal_codes,id',
+            'locations.*.address'        => 'required_with:locations|string|max:255',
+            'user_id' => 'required|exists:users,id',
         ]);
 
         if ($validator->fails()) {
@@ -68,18 +75,14 @@ class DistributionCenterHandler
                 $center->shippingMethods()->sync($data['shipping_methods']);
             }
 
-            return $center->load('shippingMethods');
+            // Cargamos todas las relaciones necesarias para refrescar la vista en React
+            return $center->load(['shippingMethods', 'locations.postalCode.city.province']);
         });
     }
 
     public function get(int $id)
     {
         return $this->repository->findById($id);
-    }
-
-    public function list()
-    {
-        return $this->repository->all();
     }
 
     public function delete(int $id): bool
@@ -96,21 +99,27 @@ class DistributionCenterHandler
         return $this->repository->delete($id);
     }
 
+    public function list()
+    {
+        return $this->repository->all();
+    }
+
     /**
-     * Obtener métodos de envío disponibles según el código postal.
+     * Obtener métodos de envío disponibles según el código postal del carrito.
      */
     public function getMethodsByPostalCode(string $postalCode)
     {
         $postalCode = trim($postalCode);
         if (empty($postalCode)) return collect();
 
-        // Buscamos siguiendo la jerarquía: Ciudad > Provincia > Proximidad
+        // El repositorio ahora busca en la tabla de múltiples ubicaciones
         $center = $this->repository->findNearestCenter($postalCode);
 
         if (!$center) {
-            throw new \Exception("No hay centros de distribución operativos en este momento.");
+            throw new \Exception("Lo sentimos, no tenemos cobertura de envío para esta zona.");
         }
 
+        // Retorna los métodos (estándar, express, etc.) que ese centro tiene permitidos
         return $center->shippingMethods;
     }
 }

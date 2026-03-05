@@ -15,16 +15,25 @@ export default function UsersList({ users, onEdit, onDelete }) {
     { 
       header: 'Rol', 
       key: 'role',
-      // Transformamos el ID del rol en un texto amigable o una etiqueta
-      render: (u) => (
-        <span className={`px-2 py-1 rounded-md text-xs font-bold ${
-          u.role === 1 
-            ? "bg-purple-900/30  border border-purple-500/50" 
-            : "bg-blue-900/30  border border-blue-500/50"
-        }`}>
-          {u.role === 1 ? "Administrador" : "Usuario"}
-        </span>
-      )
+      render: (u) => {
+        // Definimos estilos según el ID del rol
+        let label = "Usuario";
+        let styles = "bg-blue-900/30 border border-blue-500/50";
+
+        if (u.role === 1) {
+          label = "Administrador";
+          styles = "bg-purple-900/30 border border-purple-500/50 ";
+        } else if (u.role === 3) {
+          label = "Coordinador";
+          styles = "bg-pink-900/30 border border-pink-500/50";
+        }
+
+        return (
+          <span className={`px-2 py-1 rounded-md text-xs font-bold ${styles}`}>
+            {label}
+          </span>
+        );
+      }
     },
   ];
 

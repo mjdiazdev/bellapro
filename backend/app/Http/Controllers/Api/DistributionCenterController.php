@@ -26,7 +26,7 @@ class DistributionCenterController extends Controller
         try {
             $center = $handler->create($request->all());
             return response()->json([
-                'message' => 'Centro de distribución creado correctamente',
+                'message' => 'Centro de distribución y sus ubicaciones registrados correctamente',
                 'data' => $center
             ], 201);
         } catch (\Exception $e) {
