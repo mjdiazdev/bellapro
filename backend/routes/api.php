@@ -62,9 +62,40 @@ Route::middleware(['auth:sanctum'])->group(function () {
     Route::get('logout', [AuthController::class, 'logout']);
 });
 
-Route::middleware(['auth:sanctum', 'role:admin'])->group(function () {
+Route::middleware(['auth:sanctum'])->group(function () {
     // Rutas para autenticación
     Route::post('logout', [AuthController::class, 'logout']);
+
+    /**
+     * Rutas para la gestión de centros de distribución.
+     */
+    Route::get('/distribution-centers', [DistributionCenterController::class, 'list']);
+    Route::post('/distribution-centers', [DistributionCenterController::class, 'create']);
+    Route::get('/distribution-centers/{id}', [DistributionCenterController::class, 'show']);
+    Route::put('/distribution-centers/{id}', [DistributionCenterController::class, 'update']);
+    Route::delete('/distribution-centers/{id}', [DistributionCenterController::class, 'destroy']);
+
+    /**
+     * Rutas para la gestión de ordenes de pedido
+     */
+    Route::get('/orders', [OrderController::class, 'list']);
+    Route::get('/orders/{id}', [OrderController::class, 'show']);
+
+    // Actualizar el estado de múltiples órdenes
+    Route::post('orders/bulk-status', [OrderController::class, 'bulkStatusUpdate']);
+
+    /**
+     * Rutas para el panel de administración
+     */
+    Route::prefix('dashboard')->group(function () {
+        Route::get('/stats', [DashboardController::class, 'index']);
+
+        // En el futuro, si quieres estadísticas por rangos:
+        // Route::get('/stats/range', [DashboardController::class, 'customRange']);
+    });
+});
+
+Route::middleware(['auth:sanctum', 'role:admin'])->group(function () {
 
     // API de Usuarios (solo admin)
     Route::apiResource('users', UserController::class);
@@ -89,16 +120,6 @@ Route::middleware(['auth:sanctum', 'role:admin'])->group(function () {
     Route::post('/products/import', [ImportController::class, 'upload']);
 
     /**
-     * Rutas para la gestión de centros de distribución.
-     */
-    Route::get('/distribution-centers', [DistributionCenterController::class, 'list']);
-    Route::post('/distribution-centers', [DistributionCenterController::class, 'create']);
-    Route::get('/distribution-centers/{id}', [DistributionCenterController::class, 'show']);
-    Route::put('/distribution-centers/{id}', [DistributionCenterController::class, 'update']);
-    Route::delete('/distribution-centers/{id}', [DistributionCenterController::class, 'destroy']);
-
-
-    /**
      * Rutas para la gestión de métodos de envío.
      */
     Route::prefix('shipping-methods')->group(function () {
@@ -109,27 +130,9 @@ Route::middleware(['auth:sanctum', 'role:admin'])->group(function () {
         Route::delete('/{id}', [ShippingMethodController::class, 'destroy']); // Eliminar
     });
 
-    /**
-     * Rutas para la gestión de ordenes de pedido
-     */
-    Route::get('/orders', [OrderController::class, 'list']);
-    Route::get('/orders/{id}', [OrderController::class, 'show']);
-
-    /**
-     * Rutas para el panel de administración
-     */
-    Route::prefix('dashboard')->group(function () {
-        Route::get('/stats', [DashboardController::class, 'index']);
-
-        // En el futuro, si quieres estadísticas por rangos:
-        // Route::get('/stats/range', [DashboardController::class, 'customRange']);
-    });
-
     // Filtrar usuarios por rol
     Route::get('users/role/{roleName}', [UserController::class, 'getUsersByRole']);
 
-    // Actualizar el estado de múltiples órdenes
-    Route::post('orders/bulk-status', [OrderController::class, 'bulkStatusUpdate']);
 });
 
 

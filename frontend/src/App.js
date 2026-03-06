@@ -17,10 +17,28 @@ import Thanks from './pages/Client/Checkout/ThanksPage';
 import InfoPage from './pages/Client/Info/InfoPage';
 import NotFoundPage from './pages/NotFoundPage';
 import Dashboard from './pages/Admin/Dashboard/DashboardPage';
-
-function RequireAuth({children}) {
+/**
+ * Componente de Seguridad Mejorado
+ * Revisa Token y Roles permitidos
+ */
+function RequireAuth({ children, allowedRoles = [] }) {
   const token = localStorage.getItem('token');
-  return token ? children : <Navigate to="/login" />;
+  const storedData = JSON.parse(localStorage.getItem('user'));
+  
+  // Extraemos el rol del usuario (asumiendo la estructura que corregimos en el AuthController)
+  const userRole = storedData?.user?.role_name || storedData?.role_name || 'guest';
+
+  // 1. Si no hay token, al login
+  if (!token) {
+    return <Navigate to="/login" replace />;
+  }
+
+  // 2. Si hay roles definidos y el usuario no tiene uno permitido, rebotar a Pedidos
+  if (allowedRoles.length > 0 && !allowedRoles.includes(userRole)) {
+    return <Navigate to="/admin/orders" replace />;
+  }
+
+  return children;
 }
 
 export default function App() {
@@ -28,28 +46,61 @@ export default function App() {
     <BrowserRouter>
       <CartProvider>
         <Routes>
-
           {/* CLIENTE */}
           <Route path="/" element={<StorePage />} />
           <Route path="/info/:slug" element={<InfoPage />} />
 
-          {/* ADMIN */}
+          {/* ADMIN & LOGIN */}
           <Route path="/login" element={<Login/>} />
-          <Route path="/admin/dashboard" element={<RequireAuth><Dashboard/></RequireAuth>} />
-          <Route path="/admin/categories" element={<RequireAuth><Categories/></RequireAuth>} />
-          <Route path="/admin/shipping-methods" element={<RequireAuth><ShippingMethods/></RequireAuth>} />
-          <Route path="/admin/distribution-centers" element={<RequireAuth><DistributionCentersList/></RequireAuth>} />
-          <Route path="/admin/users" element={<RequireAuth><Users/></RequireAuth>} />
-          <Route path="/admin/products" element={<RequireAuth><Products/></RequireAuth>} />
-          <Route path="/admin/customers" element={<RequireAuth><Customers/></RequireAuth>} />
-          <Route path="/admin/orders" element={<RequireAuth><Orders/></RequireAuth>} />
 
-          {/* CARRO DE COMPRAS */}
+          {/* RUTAS PARA TODOS LOS AUTENTICADOS (Admin y Coordinador) */}
+          <Route path="/admin/orders" element={
+            <RequireAuth allowedRoles={['admin', 'coordinador']}>
+              <Orders/>
+            </RequireAuth>
+          } />
+
+          {/* RUTAS EXCLUSIVAS DE ADMINISTRADOR */}
+          <Route path="/admin/dashboard" element={
+            <RequireAuth allowedRoles={['admin']}>
+              <Dashboard/>
+            </RequireAuth>
+          } />
+          <Route path="/admin/categories" element={
+            <RequireAuth allowedRoles={['admin']}>
+              <Categories/>
+            </RequireAuth>
+          } />
+          <Route path="/admin/shipping-methods" element={
+            <RequireAuth allowedRoles={['admin']}>
+              <ShippingMethods/>
+            </RequireAuth>
+          } />
+          <Route path="/admin/distribution-centers" element={
+            <RequireAuth allowedRoles={['admin']}>
+              <DistributionCentersList/>
+            </RequireAuth>
+          } />
+          <Route path="/admin/users" element={
+            <RequireAuth allowedRoles={['admin']}>
+              <Users/>
+            </RequireAuth>
+          } />
+          <Route path="/admin/products" element={
+            <RequireAuth allowedRoles={['admin']}>
+              <Products/>
+            </RequireAuth>
+          } />
+          <Route path="/admin/customers" element={
+            <RequireAuth allowedRoles={['admin']}>
+              <Customers/>
+            </RequireAuth>
+          } />
+
+          {/* CARRO DE COMPRAS & OTROS */}
           <Route path="/store" element={<StorePage />} />
           <Route path="/checkout" element={<CheckoutPage />} />
           <Route path="/thanks" element={<Thanks />} />
-
-          {/* ESTA ES LA RUTA DONDE PAYPAL REGRESA AL USUARIO */}
           <Route path="/checkout/payment-confirm" element={<PaymentConfirmPage />} />
 
           <Route path="*" element={<NotFoundPage />} />

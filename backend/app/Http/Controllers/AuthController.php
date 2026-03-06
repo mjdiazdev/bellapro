@@ -34,7 +34,7 @@ class AuthController extends Controller
     public function login(Request $request)
     {
         $validated = $request->validate([
-            'email' => 'required',
+            'email' => 'required|email',
             'password' => 'required'
         ]);
 
@@ -44,11 +44,18 @@ class AuthController extends Controller
             return response()->json(['error' => 'Credenciales incorrectas'], 401);
         }
 
+        // --- CARGAR EL ROL AQUÍ ---
+        // Cargamos la relación de roles de Spatie
+        $user->load('roles');
+
+        // Agregamos un atributo extra "role_name" para que React lo lea fácil
+        $user->role_name = $user->getRoleNames()->first();
+
         $token = $user->createToken('api-token')->plainTextToken;
 
         return response()->json([
             'token' => $token,
-            'user' => $user, // agrega esta línea
+            'user' => $user,
         ]);
     }
 

@@ -31,16 +31,26 @@ class OrderRepository
     /**
      * Obtener todas las órdenes con relaciones
      */
-    public function all($perPage = 25)
+    public function all($perPage = 25, $user = null)
     {
-        return Order::with([
-                'customer',
-                'postalCode.city.province',
-                'distributionCenterMethod.shippingMethod',
-                'items.product'
-            ])
-            ->orderByDesc('id')
-            ->paginate($perPage); // Cambiamos get() por paginate()
+        $query = Order::with([
+            'customer',
+            'postalCode.city.province',
+            'distributionCenterMethod.shippingMethod',
+            'items.product'
+        ]);
+
+        // Lógica de filtrado por rol
+        if ($user && $user->hasRole('coordinador')) {
+            // Obtenemos los IDs de los centros asignados a este usuario
+            $centerIds = $user->distributionCenters()->pluck('id')->toArray();
+
+            $query->whereHas('distributionCenterMethod', function ($q) use ($centerIds) {
+                $q->whereIn('distribution_center_id', $centerIds);
+            });
+        }
+
+        return $query->orderByDesc('id')->paginate($perPage);
     }
 
     public function updateStatusBulk(array $ids, string $status): bool

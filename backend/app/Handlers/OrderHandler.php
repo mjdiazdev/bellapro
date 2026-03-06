@@ -258,10 +258,10 @@ class OrderHandler
      /**
      * Listar todas las órdenes
      */
-    public function list($perPage = 25)
+    public function list($perPage = 25, $user = null)
     {
-        // Pasamos el parámetro al repositorio
-        return $this->orders->all($perPage);
+        // Si por alguna razón no llega el usuario, el repositorio manejará la lógica por defecto
+        return $this->orders->all($perPage, $user);
     }
 
     /**

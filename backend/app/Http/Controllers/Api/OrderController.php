@@ -53,9 +53,7 @@ class OrderController extends Controller
         // Capturamos 'per_page' de la request, por defecto 25
         $perPage = $request->query('per_page', 25);
 
-        return response()->json(
-            $handler->list($perPage)
-        );
+        return response()->json($handler->list($perPage, $request->user()));
     }
 
     /**
