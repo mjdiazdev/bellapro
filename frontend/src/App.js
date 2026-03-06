@@ -62,7 +62,7 @@ export default function App() {
 
           {/* RUTAS EXCLUSIVAS DE ADMINISTRADOR */}
           <Route path="/admin/dashboard" element={
-            <RequireAuth allowedRoles={['admin']}>
+            <RequireAuth allowedRoles={['admin', 'coordinador']}>
               <Dashboard/>
             </RequireAuth>
           } />
