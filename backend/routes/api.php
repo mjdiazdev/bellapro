@@ -127,6 +127,9 @@ Route::middleware(['auth:sanctum', 'role:admin'])->group(function () {
 
     // Filtrar usuarios por rol
     Route::get('users/role/{roleName}', [UserController::class, 'getUsersByRole']);
+
+    // Actualizar el estado de múltiples órdenes
+    Route::post('orders/bulk-status', [OrderController::class, 'bulkStatusUpdate']);
 });
 
 

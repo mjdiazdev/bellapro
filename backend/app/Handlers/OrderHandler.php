@@ -321,4 +321,19 @@ class OrderHandler
             'items'             => $items
         ];
     }
+
+    public function changeStatusBulk(array $data)
+    {
+        $validator = Validator::make($data, [
+            'ids'    => 'required|array',
+            'ids.*'  => 'exists:orders,id',
+            'status' => 'required|in:pending,completed,canceled' // <--- Validación estricta
+        ]);
+
+        if ($validator->fails()) {
+            throw new \Exception($validator->errors()->first());
+        }
+
+        return $this->orders->updateStatusBulk($data['ids'], $data['status']);
+    }
 }

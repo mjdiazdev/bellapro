@@ -76,4 +76,17 @@ class OrderController extends Controller
         ]);
     }
 
+    /**
+     * Actualizar el estado de múltiples órdenes
+     */
+    public function bulkStatusUpdate(Request $request, OrderHandler $handler)
+    {
+        try {
+            $handler->changeStatusBulk($request->all());
+            return response()->json(['message' => 'Pedidos actualizados correctamente']);
+        } catch (\Exception $e) {
+            return response()->json(['message' => $e->getMessage()], 422);
+        }
+    }
+
 }

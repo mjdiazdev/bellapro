@@ -42,4 +42,10 @@ class OrderRepository
             ->orderByDesc('id')
             ->paginate($perPage); // Cambiamos get() por paginate()
     }
+
+    public function updateStatusBulk(array $ids, string $status): bool
+    {
+        // Usamos whereIn para que la actualización sea una sola sentencia SQL
+        return Order::whereIn('id', $ids)->update(['status' => $status]);
+    }
 }

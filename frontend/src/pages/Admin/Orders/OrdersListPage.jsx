@@ -6,34 +6,56 @@ import Sidebar from "../../../components/common/Sidebar";
 import Footer from "../../../components/common/Footer";
 import OrdersList from "../../../components/Admin/Orders/OrdersList";
 import PaginationControls from "../../../components/common/PaginationControls";
+import AlertModal from "../../../components/common/AlertModal"; // Importamos para feedback
 
-// Hooks
+// Hooks & Services
 import useCrud from "../../../hooks/useCrud";
+import useModal from "../../../hooks/useModal";
+import apiService from "../../../services/apiService"; // Asegúrate de que esta sea tu ruta real
+import { postAbsolute } from "../../../services/apiService";
 
 export default function OrdersListPage() {
   const RESOURCE = "orders";
 
-  // --- ESTADOS DE PAGINACIÓN ---
   const [perPage, setPerPage] = useState(25);
   const [currentPage, setCurrentPage] = useState(1);
+  
+  // Estado para el modal de alerta
+  const alertModal = useModal();
+  const [alertType, setAlertType] = useState("success");
+  const [alertMessage, setAlertMessage] = useState("");
 
-  /**
-   * 1. Hook CRUD:
-   * Usamos 'false' en el segundo parámetro para que NO cargue automáticamente,
-   * ya que nosotros controlaremos la carga con el useEffect de abajo 
-   * pasando los parámetros de paginación.
-   */
   const { items: ordersData, loadData } = useCrud(RESOURCE, false);
 
-  /**
-   * 2. Sincronización con el Backend:
-   * Cada vez que cambie la página o la cantidad por página,
-   * pedimos los nuevos datos al servidor.
-   */
   useEffect(() => {
     loadData({ per_page: perPage, page: currentPage });
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [perPage, currentPage]); 
+  }, [perPage, currentPage]);
+
+  /**
+   * === LÓGICA DE ACTUALIZACIÓN MASIVA ===
+   * Esta función se pasa como prop a OrdersList
+   */
+  const handleBulkStatusChange = async (ids, newStatus) => {
+    try {
+      // 2. Usamos postAbsolute con la ruta manual que definimos en api.php
+      // IMPORTANTE: Verifica si tu 'api.js' ya pone el prefijo /api. 
+      // Si no, usa "/api/orders/bulk-status"
+      const response = await postAbsolute("/orders/bulk-status", {
+        ids: ids,
+        status: newStatus
+      });
+
+      setAlertType("success");
+      setAlertMessage(response.message || "Pedidos actualizados correctamente");
+      alertModal.show();
+      loadData({ per_page: perPage, page: currentPage });
+    } catch (error) {
+      console.error("Error en la petición:", error.response?.data);
+      setAlertType("error");
+      setAlertMessage(error.response?.data?.message || "Error al actualizar los pedidos");
+      alertModal.show();
+    }
+  };
 
   return (
     <div className="flex flex-col min-h-screen overflow-x-hidden">
@@ -45,7 +67,6 @@ export default function OrdersListPage() {
         <main className="flex-1 p-6 md:ml-64 bg-gray-50 overflow-y-auto">
           <div className="container mx-auto card p-6 bg-white rounded-xl shadow-lg">
             
-            {/* 3. Selector de cantidad de registros (Opcional, arriba) */}
             <PaginationControls 
                 perPage={perPage} 
                 setPerPage={setPerPage} 
@@ -56,15 +77,11 @@ export default function OrdersListPage() {
             <h1 className="text-2xl font-bold text-gray-800 mb-6">Administración de Pedidos</h1>
 
             <div className="overflow-x-auto">
-              {/* 4. Lista de Pedidos:
-                Pasamos 'ordersData.data' porque Laravel Paginator 
-                envuelve los registros en esa propiedad.
-              */}
-              <OrdersList orders={ordersData?.data || []} />
+              <OrdersList 
+                orders={ordersData?.data || []} 
+                onBulkStatusChange={handleBulkStatusChange} // <-- Pasamos la función aquí
+              />
               
-              {/* 5. Controles de navegación:
-                Usamos la metadata que nos devuelve Laravel (total, last_page, etc.)
-              */}
               <PaginationControls 
                   currentPage={currentPage}
                   lastPage={ordersData?.last_page}
@@ -79,6 +96,14 @@ export default function OrdersListPage() {
       </div>
 
       <Footer />
+
+      {/* Modal para mostrar éxito o error */}
+      <AlertModal 
+        open={alertModal.open} 
+        type={alertType} 
+        message={alertMessage} 
+        onClose={alertModal.hide} 
+      />
     </div>
   );
 }
