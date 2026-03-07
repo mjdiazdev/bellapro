@@ -35,9 +35,11 @@ return [
         ],
     ],
     'paypal' => [
-        'mode' => env('PAYPAL_MODE', 'sandbox'),
-        'client_id' => env('PAYPAL_CLIENT_ID'),
-        'secret' => env('PAYPAL_CLIENT_SECRET'),
+        'mode'       => env('PAYPAL_MODE', 'sandbox'),
+        'client_id'  => env('PAYPAL_CLIENT_ID'),
+        'secret'     => env('PAYPAL_CLIENT_SECRET'),
+        'return_url' => env('PAYPAL_RETURN_URL'),
+        'cancel_url' => env('PAYPAL_CANCEL_URL'),
     ],
 
 

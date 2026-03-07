@@ -156,11 +156,11 @@ class ProductHandler
         }
 
         $validator = Validator::make(['items' => $items], [
-            'items' => 'required|array',
-            'items.*.id' => 'required|integer|exists:products,id',
-            'items.*.price' => 'required|numeric|min:0',
-            'items.*.stock' => 'required|integer|min:0',
-            'items.*.status' => 'required|boolean', // <--- Nueva validación
+            'items'          => 'required|array',
+            'items.*.id'     => 'required|integer|exists:products,id',
+            'items.*.price'  => 'required|numeric|min:0',
+            'items.*.stock'  => 'required|integer|min:0',
+            'items.*.status' => 'nullable|boolean',
         ]);
 
         if ($validator->fails()) {
@@ -169,11 +169,12 @@ class ProductHandler
 
         return DB::transaction(function () use ($items) {
             foreach ($items as $item) {
-                // 1. Actualizamos precio Y status en la tabla products
-                $this->products->update($item['id'], [
-                    'price'  => $item['price'],
-                    'status' => $item['status'] // <--- Persistimos el nuevo estatus
-                ]);
+                // 1. Actualizamos precio; status solo si viene en el payload
+                $updateData = ['price' => $item['price']];
+                if (array_key_exists('status', $item)) {
+                    $updateData['status'] = $item['status'];
+                }
+                $this->products->update($item['id'], $updateData);
 
                 // 2. Actualizamos el stock
                 $product = $this->products->findById($item['id']);

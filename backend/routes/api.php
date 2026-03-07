@@ -33,6 +33,8 @@ Route::post('login', [AuthController::class, 'login']);
 
 // Buscar datos de localización por el código postal
 Route::get('postal-codes/search/{code}', [PostalCodeController::class, 'search']);
+// Lookup con fallback a API externa (zippopotam.us) y autocreación bajo demanda
+Route::get('postal-codes/lookup/{code}', [PostalCodeController::class, 'lookup']);
 
 // Rutas para provincias
 Route::prefix('provinces')->group(function () {

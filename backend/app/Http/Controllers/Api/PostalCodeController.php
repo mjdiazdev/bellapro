@@ -45,4 +45,19 @@ class PostalCodeController extends Controller
 
         return response()->json(['data' => $postalCode]);
     }
+
+    /**
+     * Busca en DB local; si no existe, consulta api.zippopotam.us y crea el registro.
+     * Devuelve el mismo formato que search().
+     */
+    public function lookup(PostalCodeHandler $handler, $code)
+    {
+        $postalCode = $handler->lookupOrCreate($code);
+
+        if (!$postalCode) {
+            return response()->json(['message' => 'Código postal no encontrado'], 404);
+        }
+
+        return response()->json(['data' => $postalCode]);
+    }
 }

@@ -49,6 +49,7 @@ export default function ProductsListPage() {
   useEffect(() => {
     if (products?.data) {
       setLocalProducts(products.data);
+      setSelectedIds(new Set());
     }
   }, [products?.data]); // Escuchamos específicamente al array de datos, no al objeto completo
 
@@ -74,9 +75,68 @@ export default function ProductsListPage() {
   });
 
   const [formMode, setFormMode] = useState("create");
-  const [idToDelete, setIdToDelete] = useState(null); 
-  const [alertType, setAlertType] = useState("success"); 
+  const [idToDelete, setIdToDelete] = useState(null);
+  const [alertType, setAlertType] = useState("success");
   const [alertMessage, setAlertMessage] = useState("");
+
+  // === SELECCIÓN MASIVA ===
+  const [selectedIds, setSelectedIds] = useState(new Set());
+  const [bulkPrice, setBulkPrice] = useState("");
+  const [bulkStock, setBulkStock] = useState("");
+
+  const handleToggleSelect = (id) => {
+    setSelectedIds(prev => {
+      const next = new Set(prev);
+      next.has(id) ? next.delete(id) : next.add(id);
+      return next;
+    });
+  };
+
+  const handleToggleSelectAll = () => {
+    if (selectedIds.size === localProducts.length) {
+      setSelectedIds(new Set());
+    } else {
+      setSelectedIds(new Set(localProducts.map(p => p.id)));
+    }
+  };
+
+  const handleApplyToSelected = async () => {
+    if (selectedIds.size === 0) return;
+    if (bulkPrice === "" && bulkStock === "") return;
+
+    // Construir los items afectados con los valores nuevos
+    const itemsToSave = localProducts
+      .filter(p => selectedIds.has(p.id))
+      .map(p => ({
+        id: p.id,
+        price: bulkPrice !== "" ? bulkPrice : p.price,
+        stock: bulkStock !== "" ? Number(bulkStock) : (p.stock?.stock ?? 0),
+      }));
+
+    // Actualizar estado local
+    setLocalProducts(prev => prev.map(p => {
+      if (!selectedIds.has(p.id)) return p;
+      let updated = { ...p };
+      if (bulkPrice !== "") updated = { ...updated, price: bulkPrice };
+      if (bulkStock !== "") updated = { ...updated, stock: { ...p.stock, stock: Number(bulkStock) } };
+      return updated;
+    }));
+
+    setBulkPrice("");
+    setBulkStock("");
+
+    // Guardar directamente en DB solo los productos afectados
+    try {
+      const res = await bulkUpdateItems(RESOURCE, { items: itemsToSave });
+      setAlertType("success");
+      setAlertMessage(res.message);
+      loadData();
+    } catch (error) {
+      setAlertType("error");
+      setAlertMessage(error.response?.data?.message || "Error al guardar los cambios");
+    }
+    alertModal.show();
+  };
 
   /**
    * === LÓGICA DE EDICIÓN EN TABLA (LOCAL) ===
@@ -250,6 +310,42 @@ export default function ProductsListPage() {
               <Button width="150px" onClick={handleCreate}>+ Nuevo Producto</Button>
             </div>
 
+            {/* Barra de aplicación masiva — visible solo cuando hay filas seleccionadas */}
+            {selectedIds.size > 0 && (
+              <div className="flex flex-wrap items-center gap-3 mb-4 p-3 bg-pink-50 border border-pink-200 rounded-lg">
+                <span className="text-sm font-semibold text-pink-700">
+                  {selectedIds.size} producto{selectedIds.size > 1 ? 's' : ''} seleccionado{selectedIds.size > 1 ? 's' : ''}
+                </span>
+                <input
+                  type="number"
+                  step="0.01"
+                  placeholder="Precio (€)"
+                  value={bulkPrice}
+                  onChange={e => setBulkPrice(e.target.value)}
+                  className="w-32 p-2 border border-pink-300 rounded-lg text-sm focus:outline-none focus:border-pink-500"
+                />
+                <input
+                  type="number"
+                  placeholder="Stock"
+                  value={bulkStock}
+                  onChange={e => setBulkStock(e.target.value)}
+                  className="w-28 p-2 border border-pink-300 rounded-lg text-sm focus:outline-none focus:border-pink-500"
+                />
+                <button
+                  onClick={handleApplyToSelected}
+                  className="px-4 py-2 bg-pink-500 text-white text-sm font-semibold rounded-lg hover:bg-pink-600 transition-colors"
+                >
+                  Aplicar a seleccionados
+                </button>
+                <button
+                  onClick={() => setSelectedIds(new Set())}
+                  className="px-3 py-2 text-sm text-gray-500 hover:text-gray-700 transition-colors"
+                >
+                  Deseleccionar todo
+                </button>
+              </div>
+            )}
+
             {/* Lista de Productos:
                 - Pasamos localProducts para permitir la edición en tiempo real.
                 - onLocalChange captura los cambios de los inputs en la tabla.
@@ -262,6 +358,9 @@ export default function ProductsListPage() {
                   onDelete={handleDeleteClick}
                   onLocalChange={handleLocalChange}
                   onSaveAll={handleBulkSave}
+                  selectedIds={selectedIds}
+                  onToggleSelect={handleToggleSelect}
+                  onToggleSelectAll={handleToggleSelectAll}
                 />
                 <PaginationControls 
                     currentPage={currentPage}

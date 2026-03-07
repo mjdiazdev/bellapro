@@ -23,11 +23,15 @@ class CategoryRepository
     }
 
     /**
-     * Buscar categoría por código.
+     * Buscar categoría por código exacto (insensible a mayúsculas) o por nombre.
      */
     public function findByCode(string $code): ?Category
     {
-        return Category::where('code', $code)->first();
+        $term = strtolower(trim($code));
+
+        return Category::whereRaw('LOWER(code) = ?', [$term])
+            ->orWhereRaw('LOWER(name) = ?', [$term])
+            ->first();
     }
 
     /**

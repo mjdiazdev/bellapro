@@ -69,7 +69,7 @@ export default function DistributionCentersPage() {
     if (cpValue.length === 5) {
       setIsLoadingCP(true);
       try {
-        const res = await getAbsolute(`/postal-codes/search/${cpValue}`);
+        const res = await getAbsolute(`/postal-codes/lookup/${cpValue}`);
         const data = res.data;
 
         if (data && data.city) {

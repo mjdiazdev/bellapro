@@ -2,10 +2,31 @@ import { useState } from "react";
 import AdminTable from "../../common/AdminTable";
 import ProductDetailsModal from "./ProductDetailsModal";
 
-export default function ProductsList({ products, onEdit, onDelete, onLocalChange, onSaveAll }) {
+export default function ProductsList({ products, onEdit, onDelete, onLocalChange, onSaveAll, selectedIds = new Set(), onToggleSelect, onToggleSelectAll }) {
   const [selectedProduct, setSelectedProduct] = useState(null);
 
+  const allSelected = products.length > 0 && selectedIds.size === products.length;
+
   const columns = [
+    {
+      header: (
+        <input
+          type="checkbox"
+          checked={allSelected}
+          className="w-4 h-4 accent-pink cursor-pointer"
+          onChange={onToggleSelectAll}
+        />
+      ),
+      key: 'select',
+      render: (p) => (
+        <input
+          type="checkbox"
+          checked={selectedIds.has(p.id)}
+          className="w-4 h-4 accent-pink cursor-pointer"
+          onChange={() => onToggleSelect(p.id)}
+        />
+      )
+    },
     {
       header: 'Imagen',
       key: 'image_url',

@@ -73,8 +73,8 @@ class PayPalService
                     ]
                 ],
                 'application_context' => [
-                    'return_url' => env('PAYPAL_RETURN_URL'),
-                    'cancel_url' => env('PAYPAL_CANCEL_URL'),
+                    'return_url' => config('services.paypal.return_url'),
+                    'cancel_url' => config('services.paypal.cancel_url'),
                     'brand_name' => 'BellaPro',
                     'user_action' => 'PAY_NOW',
                     'shipping_preference' => 'NO_SHIPPING'
