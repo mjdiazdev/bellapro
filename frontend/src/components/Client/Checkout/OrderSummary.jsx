@@ -49,28 +49,28 @@ export default function OrderSummary({ selectedShippingMethod }) {
                   {selectedShippingMethod?.name || "Pendiente de selección"}
                 </span>
               </span>
-              <span>{shippingPrice > 0 ? `€${shippingPrice.toFixed(2)}` : '€0.00'}</span>
+              <span>{shippingPrice > 0 ? `${shippingPrice.toFixed(2)}€` : '0.00€'}</span>
             </div>
 
             {/* BASE IMPONIBLE: Suma de productos + envío */}
             <div className="flex justify-between font-semibold text-gray-700 pt-2 border-t border-dashed border-gray-200">
               <span>Base Imponible</span>
-              <span>€{baseImponible.toFixed(2)}</span>
+              <span>{baseImponible.toFixed(2)}€</span>
             </div>
 
             <div className="flex justify-between">
               <span>IVA (21%)</span>
-              <span>€{iva.toFixed(2)}</span>
+              <span>{iva.toFixed(2)}€</span>
             </div>
           </div>
 
           <hr className="border-gray-800 my-4" />
 
           {/* TOTAL FINAL */}
-          <div className="flex justify-between items-end font-bold text-2xl text-gray-900">
+          <div className="flex justify-between items-end font-bold  text-gray-900">
             <span className="text-base mb-1">Total</span>
             <div className="flex flex-col items-end">
-              <span>€{total.toFixed(2)}</span>
+              <span>{total.toFixed(2)}€</span>
             </div>
           </div>
 
