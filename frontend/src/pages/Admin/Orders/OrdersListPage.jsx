@@ -64,38 +64,41 @@ export default function OrdersListPage() {
       <div className="flex flex-1">
         <Sidebar />
 
-        <main className="flex-1 p-6 md:ml-64 bg-gray-50 overflow-y-auto">
-          <div className="container mx-auto card p-6 bg-white rounded-xl shadow-lg">
-            
-            <PaginationControls 
-                perPage={perPage} 
-                setPerPage={setPerPage} 
-                setCurrentPage={setCurrentPage}
-                onlySelector={true} 
-            />
-
-            <h1 className="text-2xl font-bold text-gray-800 mb-6">Administración de Pedidos</h1>
-
-            <div className="overflow-x-auto">
-              <OrdersList 
-                orders={ordersData?.data || []} 
-                onBulkStatusChange={handleBulkStatusChange} // <-- Pasamos la función aquí
-              />
+        <main className="flex-1 md:ml-64 bg-gray-50 flex flex-col min-h-[calc(100vh-64px)]">
+          {/* Contenido Superior (La tarjeta con la tabla) */}
+          <div className="flex-grow p-4 md:p-6">
+            <div className="container mx-auto card p-6 bg-white rounded-xl shadow-lg">
               
               <PaginationControls 
-                  currentPage={currentPage}
-                  lastPage={ordersData?.last_page}
+                  perPage={perPage} 
+                  setPerPage={setPerPage} 
                   setCurrentPage={setCurrentPage}
-                  from={ordersData?.from}
-                  to={ordersData?.to}
-                  total={ordersData?.total}
+                  onlySelector={true} 
               />
-            </div>            
+
+              <h1 className="text-2xl font-bold text-gray-800 mb-6">Administración de Pedidos</h1>
+
+              <div className="overflow-x-auto">
+                <OrdersList 
+                  orders={ordersData?.data || []} 
+                  onBulkStatusChange={handleBulkStatusChange} // <-- Pasamos la función aquí
+                />
+                
+                <PaginationControls 
+                    currentPage={currentPage}
+                    lastPage={ordersData?.last_page}
+                    setCurrentPage={setCurrentPage}
+                    from={ordersData?.from}
+                    to={ordersData?.to}
+                    total={ordersData?.total}
+                />
+              </div>            
+            </div>
           </div>
+          <Footer />
         </main>
       </div>
 
-      <Footer />
 
       {/* Modal para mostrar éxito o error */}
       <AlertModal 

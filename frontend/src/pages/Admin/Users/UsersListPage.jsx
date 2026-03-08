@@ -149,33 +149,34 @@ export default function UsersListPage() {
         <Sidebar />
 
         {/* Contenido principal */}
-        <main className="flex-1 p-6 md:ml-64 bg-gray-50 overflow-y-auto">
-          <div className="container mx-auto card p-6 bg-white rounded-xl shadow-lg">
+        <main className="flex-1 md:ml-64 bg-gray-50 flex flex-col min-h-[calc(100vh-64px)]">
+          {/* Contenido Superior (La tarjeta con la tabla) */}
+          <div className="flex-grow p-4 md:p-6">
+            <div className="container mx-auto card p-6 bg-white rounded-xl shadow-lg">
 
-            {/* Título de la página */}
-            <h1 className="text-2xl font-bold text-gray-800 mb-6">
-              Administración de Usuarios
-            </h1>
+              {/* Título de la página */}
+              <h1 className="text-2xl font-bold text-gray-800 mb-6">
+                Administración de Usuarios
+              </h1>
 
-            {/* Botón Crear usuario */}
-            <div className="flex flex-col sm:flex-row justify-end gap-4 mb-6">
-              <Button width="150px" onClick={handleCreate}>+ Nuevo Usuario</Button>
-            </div>
+              {/* Botón Crear usuario */}
+              <div className="flex flex-col sm:flex-row justify-end gap-4 mb-6">
+                <Button width="150px" onClick={handleCreate}>+ Nuevo Usuario</Button>
+              </div>
 
-            {/* Tabla de usuarios con scroll horizontal en móviles */}
-            <div className="overflow-x-auto">
-              <UsersList
-                users={users}
-                onEdit={handleEdit}
-                onDelete={handleDeleteClick}
-              />
+              {/* Tabla de usuarios con scroll horizontal en móviles */}
+              <div className="overflow-x-auto">
+                <UsersList
+                  users={users}
+                  onEdit={handleEdit}
+                  onDelete={handleDeleteClick}
+                />
+              </div>
             </div>
           </div>
+          <Footer />
         </main>
       </div>
-
-      {/* Footer global */}
-      <Footer />
 
       {/* Modal de formulario */}
       <Modal

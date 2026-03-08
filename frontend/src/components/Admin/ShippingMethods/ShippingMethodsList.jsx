@@ -18,7 +18,7 @@ export default function ShippingMethodsList({ shippingMethods, onEdit, onDelete 
       // Usamos render para formatear el número como moneda
       render: (method) => (
         <span className="font-medium">
-          ${Number(method.price).toFixed(2)}
+          {Number(method.price).toFixed(2)}€
         </span>
       )
     },

@@ -73,49 +73,62 @@ export default function CategoryProductsDetails({ categoryCode }) {
 
   // Render principal con información de categoría y productos
   return (
-    <div className="p-6 max-w-4xl mx-auto">
-      {/* Nombre de la categoría */}
-      <h1 className="text-2xl font-bold mb-4">{category.name}</h1>
+    /* Añadimos max-h para que el modal no crezca infinitamente 
+       y flex-col para organizar el contenido.
+    */
+    <div className="flex flex-col max-h-[80vh] w-full">
+      
+      {/* Cabecera fija del modal (Nombre y QR) */}
+      <div className="p-6 border-b bg-white sticky top-0 z-10">
+        <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
+          <div>
+            <h1 className="text-2xl font-bold text-gray-800">{category.name}</h1>
+            <p className="text-sm text-gray-500 italic">Código de categoría: {categoryCode}</p>
+          </div>
+          <img
+            src={`${process.env.REACT_APP_BACKEND_URL}/storage/${category.qr_url}`}
+            alt="QR"
+            className="w-24 h-24 border rounded-lg shadow-sm"
+          />
+        </div>
+      </div>
 
-      {/* Código QR de la categoría */}
-      <img
-        src={`${process.env.REACT_APP_BACKEND_URL}/storage/${category.qr_url}`}
-        alt="QR"
-        className="mb-6 w-40 h-40"
-      />
+      {/* Cuerpo del modal con SCROLL 
+          overflow-y-auto permite deslizar solo esta sección
+      */}
+      <div className="p-6 overflow-y-auto flex-1 bg-gray-50">
+        <h2 className="text-xl font-semibold mb-4 text-gray-700">Productos Vinculados</h2>
 
-      {/* Sección de productos */}
-      <h2 className="text-xl font-semibold mb-4">Productos</h2>
-
-      {/* Si no hay productos */}
-      {products.length === 0 ? (
-        <p>No hay productos en esta categoría.</p>
-      ) : (
-        // Tabla de productos
-        <table className="w-full border text-left">
-          {/* Cabecera de la tabla */}
-          <thead className="bg-gray-700 text-white">
-            <tr>
-              <th className="p-2">Nombre</th>
-              <th className="p-2">Referencia</th>
-              <th className="p-2">Precio</th>
-              <th className="p-2">Descripción</th>
-            </tr>
-          </thead>
-
-          {/* Cuerpo de la tabla */}
-          <tbody>
-            {products.map((p) => (
-              <tr key={p.id} className="border-b">
-                <td className="p-2">{p.name}</td>
-                <td className="p-2">{p.reference}</td>
-                <td className="p-2">{p.price}</td>
-                <td className="p-2">{p.description}</td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
-      )}
+        {products.length === 0 ? (
+          <div className="bg-white p-8 text-center rounded-lg border border-dashed border-gray-300">
+            <p className="text-gray-500">No hay productos en esta categoría.</p>
+          </div>
+        ) : (
+          <div className="overflow-x-auto shadow-sm rounded-lg border border-gray-200">
+            <table className="w-full text-left bg-white border-collapse">
+              {/* thead con sticky para que no se pierda al bajar */}
+              <thead className="bg-gray-800 text-white sticky top-0">
+                <tr>
+                  <th className="p-3 text-sm font-semibold">Nombre</th>
+                  <th className="p-3 text-sm font-semibold">Referencia</th>
+                  <th className="p-3 text-sm font-semibold text-right">Precio</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-gray-100">
+                {products.map((p) => (
+                  <tr key={p.id} className="hover:bg-pink-50 transition-colors">
+                    <td className="p-3 text-sm font-medium text-gray-800">{p.name}</td>
+                    <td className="p-3 text-sm text-gray-600 font-mono">{p.reference}</td>
+                    <td className="p-3 text-sm text-gray-800 text-right font-bold">
+                      ${Number(p.price).toLocaleString()}
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        )}
+      </div>
     </div>
   );
 }

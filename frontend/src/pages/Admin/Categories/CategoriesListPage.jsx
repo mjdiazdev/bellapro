@@ -132,45 +132,45 @@ export default function CategoriesListPage() {
         <Sidebar activeItem={activeItem} setActiveItem={setActiveItem} />
 
         {/* Contenido principal */}
-        <main className="flex-1 p-6 md:ml-64 bg-gray-50 overflow-y-auto">
-          <div className="container mx-auto card p-6 bg-white rounded-xl shadow-lg">
+        <main className="flex-1 md:ml-64 bg-gray-50 flex flex-col min-h-[calc(100vh-64px)]">
+          {/* Contenido Superior (La tarjeta con la tabla) */}
+          <div className="flex-grow p-4 md:p-6">
+            <div className="container mx-auto card p-6 bg-white rounded-xl shadow-lg">
 
-            {/* Título */}
-            <h1 className="text-2xl font-bold text-gray-800 mb-6">Administración de Categorías</h1>
+              {/* Título */}
+              <h1 className="text-2xl font-bold text-gray-800 mb-6">Administración de Categorías</h1>
 
-            {/* Botones de acción */}
-            <div className="flex flex-col sm:flex-row justify-end gap-4 mb-6">
-              {/* Crear categoría */}
-              <Button width="150px" onClick={handleCreate}>+ Nueva Categoría</Button>
+              {/* Botones de acción */}
+              <div className="flex flex-col sm:flex-row justify-end gap-4 mb-6">
+                {/* Crear categoría */}
+                <Button width="150px" onClick={handleCreate}>+ Nueva Categoría</Button>
 
-              {/* Descargar PDF */}
-              <Button width="250px">
-              <a 
-                href={`${BACKEND_URL}/categories/qrs/pdf`}
-                target="_blank"
-                rel="noopener noreferrer" // ⚠ Seguridad: evitar riesgos con target="_blank"
-              >
-                <i className="fas fa-file-pdf"></i> Descargar QR en PDF
-              </a>
-              </Button>
+                {/* Descargar PDF */}
+                <Button width="250px">
+                <a 
+                  href={`${BACKEND_URL}/categories/qrs/pdf`}
+                  target="_blank"
+                  rel="noopener noreferrer" // ⚠ Seguridad: evitar riesgos con target="_blank"
+                >
+                  <i className="fas fa-file-pdf"></i> Descargar QR en PDF
+                </a>
+                </Button>
+              </div>
+
+              {/* Tabla responsive */}
+              <div className="overflow-x-auto">
+                <CategoriesList
+                  categories={Array.isArray(categories?.data) ? categories.data : []} // <-- acceder a products.data
+                  onEdit={handleEdit}
+                  onDelete={handleDeleteClick}
+                />
+              </div>
             </div>
-
-            {/* Tabla responsive */}
-            <div className="overflow-x-auto">
-              <CategoriesList
-                categories={Array.isArray(categories?.data) ? categories.data : []} // <-- acceder a products.data
-                onEdit={handleEdit}
-                onDelete={handleDeleteClick}
-              />
-            </div>
-
           </div>
+          {/* Footer */}
+          <Footer />
         </main>
       </div>
-
-      {/* Footer */}
-      <Footer />
-
       {/* Modales */}
       <ConfirmModal
         open={confirmModal.open}

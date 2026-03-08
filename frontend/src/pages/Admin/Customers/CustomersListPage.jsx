@@ -147,44 +147,47 @@ export default function CustomersListPage() {
       <Header />
       <div className="flex flex-1">
         <Sidebar />
-        <main className="flex-1 p-6 md:ml-64 bg-gray-50 overflow-y-auto">
-          <div className="container mx-auto card p-6 bg-white rounded-xl shadow-lg">
-            
-            {/* Selector de cantidad (Arriba) */}
-            <PaginationControls 
-                perPage={perPage} 
-                setPerPage={setPerPage} 
-                setCurrentPage={setCurrentPage}
-                onlySelector={true} 
-            />
-
-            <div className="flex justify-between items-center mb-6">
-              <h1 className="text-2xl font-bold text-gray-800">Clientes</h1>
-              <Button width="150px" onClick={handleCreate}>+ Nuevo Cliente</Button>
-            </div>
-
-            <div className="overflow-x-auto">
-              <CustomersList
-                customers={customersData?.data || []} // Acceso a data del paginador
-                onEdit={handleEdit}
-                onDelete={(id) => { setIdToDelete(id); confirmModal.show(); }}
-              />
+        {/* Contenido principal */}
+        <main className="flex-1 md:ml-64 bg-gray-50 flex flex-col min-h-[calc(100vh-64px)]">
+          {/* Contenido Superior (La tarjeta con la tabla) */}
+          <div className="flex-grow p-4 md:p-6">
+            <div className="container mx-auto card p-6 bg-white rounded-xl shadow-lg">
               
-              {/* Navegación (Abajo) */}
+              {/* Selector de cantidad (Arriba) */}
               <PaginationControls 
-                  currentPage={currentPage}
-                  lastPage={customersData?.last_page}
+                  perPage={perPage} 
+                  setPerPage={setPerPage} 
                   setCurrentPage={setCurrentPage}
-                  from={customersData?.from}
-                  to={customersData?.to}
-                  total={customersData?.total}
+                  onlySelector={true} 
               />
+
+              <div className="flex justify-between items-center mb-6">
+                <h1 className="text-2xl font-bold text-gray-800">Clientes</h1>
+                <Button width="150px" onClick={handleCreate}>+ Nuevo Cliente</Button>
+              </div>
+
+              <div className="overflow-x-auto">
+                <CustomersList
+                  customers={customersData?.data || []} // Acceso a data del paginador
+                  onEdit={handleEdit}
+                  onDelete={(id) => { setIdToDelete(id); confirmModal.show(); }}
+                />
+                
+                {/* Navegación (Abajo) */}
+                <PaginationControls 
+                    currentPage={currentPage}
+                    lastPage={customersData?.last_page}
+                    setCurrentPage={setCurrentPage}
+                    from={customersData?.from}
+                    to={customersData?.to}
+                    total={customersData?.total}
+                />
+              </div>
             </div>
           </div>
+          <Footer />
         </main>
       </div>
-
-      <Footer />
 
       {/* Modales se mantienen igual, solo asegúrate de que el select de provincias use provinces.data */}
       <Modal open={formModal.open} title={formMode === "create" ? "Nuevo Cliente" : "Editar Cliente"} onClose={formModal.hide}>

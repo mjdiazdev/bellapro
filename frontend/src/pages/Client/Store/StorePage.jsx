@@ -28,21 +28,24 @@ export default function StorePage() {
 
     const loadProducts = async () => {
       setLoading(true);
+      setCatalogProducts([]); // <-- LIMPIAMOS el catálogo anterior para dar feedback visual
       try {
         const res = await getQrData(qrCode);
         setCategory(res.data.category);
 
-      const newCatalog = res.data.products.map(p => ({
-        id: p.id,
-        name: p.name,
-        reference: p.reference,
-        price: Number(p.price),
-        image: p.image_url,
-        stock: p.stock ? p.stock.stock : 0
-      }));
+        const newCatalog = res.data.products.map(p => ({
+          id: p.id,
+          name: p.name,
+          reference: p.reference,
+          price: Number(p.price),
+          image: p.image_url,
+          stock: p.stock ? p.stock.stock : 0
+        }));
 
-        // Solo cargamos el catálogo de la categoría actual
         setCatalogProducts(newCatalog);
+        
+        // Forzamos el scroll arriba cuando cargan los productos
+        window.scrollTo({ top: 0, behavior: 'smooth' });
 
       } catch (error) {
         console.error("Error loading QR data", error);
@@ -52,7 +55,7 @@ export default function StorePage() {
     };
 
     loadProducts();
-  }, [qrCode]);
+  }, [qrCode]); // Este qrCode detectará el cambio desde la URL
 
   // Lógica para buscar y hacer scroll (Efecto tipo Ctrl+F)
   useEffect(() => {

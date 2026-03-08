@@ -216,23 +216,26 @@ export default function DistributionCentersPage() {
       <Header />
       <div className="flex flex-1">
         <Sidebar activeItem="DistributionCenters" />
-        <main className="flex-1 p-6 md:ml-64 bg-gray-50 overflow-y-auto pt-24">
-          <div className="container mx-auto p-6 bg-white rounded-xl shadow-lg">
-            <h1 className="text-2xl font-bold text-gray-800 mb-6">Centros de Distribución</h1>
-            <div className="flex justify-end mb-6">
-              <Button width="220px" onClick={handleCreate}>+ Nuevo Centro</Button>
-            </div>
-            <div className="overflow-x-auto">
-              <DistributionCentersList
-                centers={Array.isArray(centers) ? centers : centers?.data || []}
-                onEdit={handleEdit}
-                onDelete={(id) => { setIdToDelete(id); confirmModal.show(); }}
-              />
+        <main className="flex-1 md:ml-64 bg-gray-50 flex flex-col min-h-[calc(100vh-64px)]">
+          {/* Contenido Superior (La tarjeta con la tabla) */}
+          <div className="flex-grow p-4 md:p-6">
+            <div className="container mx-auto p-6 bg-white rounded-xl shadow-lg">
+              <h1 className="text-2xl font-bold text-gray-800 mb-6">Centros de Distribución</h1>
+              <div className="flex justify-end mb-6">
+                <Button width="220px" onClick={handleCreate}>+ Nuevo Centro</Button>
+              </div>
+              <div className="overflow-x-auto">
+                <DistributionCentersList
+                  centers={Array.isArray(centers) ? centers : centers?.data || []}
+                  onEdit={handleEdit}
+                  onDelete={(id) => { setIdToDelete(id); confirmModal.show(); }}
+                />
+              </div>
             </div>
           </div>
+          <Footer />
         </main>
       </div>
-      <Footer />
 
       <Modal 
         open={formModal.open} 

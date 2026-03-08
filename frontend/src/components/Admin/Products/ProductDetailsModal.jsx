@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { getAbsolute } from "../../../services/apiService";
-import { X, Package, Info, DollarSign } from "lucide-react"; 
+import { X, Package, Info, DollarSign, Euro } from "lucide-react"; 
 
 export default function ProductDetailsModal({ productId, onClose }) {
   const [product, setProduct] = useState(null);
@@ -69,9 +69,9 @@ export default function ProductDetailsModal({ productId, onClose }) {
             <div className="flex items-center gap-4 py-4 border-y border-gray-50">
               <div className="flex-1">
                 <p className="text-xs text-gray-400 flex items-center gap-1">
-                  <DollarSign size={12} /> Precio
+                   Precio  €
                 </p>
-                <p className="text-xl font-bold text-gray-900">€{Number(product.price).toFixed(2)}</p>
+                <p className="text-xl font-bold text-gray-900">{Number(product.price).toFixed(2)}€</p>
               </div>
               <div className="flex-1">
                 <p className="text-xs text-gray-400 flex items-center gap-1">

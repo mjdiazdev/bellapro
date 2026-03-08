@@ -291,91 +291,93 @@ export default function ProductsListPage() {
       <div className="flex flex-1">
         <Sidebar />
 
-        <main className="flex-1 p-6 md:ml-64 bg-gray-50 overflow-y-auto">
-          <div className="container mx-auto card p-6 bg-white rounded-xl shadow-lg">
+        <main className="flex-1 md:ml-64 bg-gray-50 flex flex-col min-h-[calc(100vh-64px)]">
+          {/* Contenido Superior (La tarjeta con la tabla) */}
+          <div className="flex-grow p-4 md:p-6">
+            <div className="container mx-auto card p-6 bg-white rounded-xl shadow-lg">
 
-            <h1 className="text-2xl font-bold text-gray-800 mb-6">Administración de Productos</h1>
-            <PaginationControls 
-                perPage={perPage} 
-                setPerPage={setPerPage} 
-                setCurrentPage={setCurrentPage}
-                onlySelector={true} // Podrías pasarle un prop para mostrar solo el select
-            />
-            {/* Botones de acción principales */}
-            <div className="flex flex-col sm:flex-row justify-end gap-4 mb-6">
-              <BulkImportButton 
-                onImportSuccess={handleImportSuccess}
-                onImportError={handleImportError}
+              <h1 className="text-2xl font-bold text-gray-800 mb-6">Administración de Productos</h1>
+              <PaginationControls 
+                  perPage={perPage} 
+                  setPerPage={setPerPage} 
+                  setCurrentPage={setCurrentPage}
+                  onlySelector={true} // Podrías pasarle un prop para mostrar solo el select
               />
-              <Button width="150px" onClick={handleCreate}>+ Nuevo Producto</Button>
-            </div>
-
-            {/* Barra de aplicación masiva — visible solo cuando hay filas seleccionadas */}
-            {selectedIds.size > 0 && (
-              <div className="flex flex-wrap items-center gap-3 mb-4 p-3 bg-pink-50 border border-pink-200 rounded-lg">
-                <span className="text-sm font-semibold text-pink-700">
-                  {selectedIds.size} producto{selectedIds.size > 1 ? 's' : ''} seleccionado{selectedIds.size > 1 ? 's' : ''}
-                </span>
-                <input
-                  type="number"
-                  step="0.01"
-                  placeholder="Precio (€)"
-                  value={bulkPrice}
-                  onChange={e => setBulkPrice(e.target.value)}
-                  className="w-32 p-2 border border-pink-300 rounded-lg text-sm focus:outline-none focus:border-pink-500"
+              {/* Botones de acción principales */}
+              <div className="flex flex-col sm:flex-row justify-end gap-4 mb-6">
+                <BulkImportButton 
+                  onImportSuccess={handleImportSuccess}
+                  onImportError={handleImportError}
                 />
-                <input
-                  type="number"
-                  placeholder="Stock"
-                  value={bulkStock}
-                  onChange={e => setBulkStock(e.target.value)}
-                  className="w-28 p-2 border border-pink-300 rounded-lg text-sm focus:outline-none focus:border-pink-500"
-                />
-                <button
-                  onClick={handleApplyToSelected}
-                  className="px-4 py-2 bg-pink-500 text-white text-sm font-semibold rounded-lg hover:bg-pink-600 transition-colors"
-                >
-                  Aplicar a seleccionados
-                </button>
-                <button
-                  onClick={() => setSelectedIds(new Set())}
-                  className="px-3 py-2 text-sm text-gray-500 hover:text-gray-700 transition-colors"
-                >
-                  Deseleccionar todo
-                </button>
+                <Button width="150px" onClick={handleCreate}>+ Nuevo Producto</Button>
               </div>
-            )}
 
-            {/* Lista de Productos:
-                - Pasamos localProducts para permitir la edición en tiempo real.
-                - onLocalChange captura los cambios de los inputs en la tabla.
-                - onSaveAll dispara la petición Bulk al backend.
-            */}
-            <div className="overflow-x-auto">
-                <ProductsList
-                  products={localProducts}
-                  onEdit={handleEdit}
-                  onDelete={handleDeleteClick}
-                  onLocalChange={handleLocalChange}
-                  onSaveAll={handleBulkSave}
-                  selectedIds={selectedIds}
-                  onToggleSelect={handleToggleSelect}
-                  onToggleSelectAll={handleToggleSelectAll}
-                />
-                <PaginationControls 
-                    currentPage={currentPage}
-                    lastPage={products?.last_page}
-                    setCurrentPage={setCurrentPage}
-                    from={products?.from}
-                    to={products?.to}
-                    total={products?.total}
-                />
+              {/* Barra de aplicación masiva — visible solo cuando hay filas seleccionadas */}
+              {selectedIds.size > 0 && (
+                <div className="flex flex-wrap items-center gap-3 mb-4 p-3 bg-pink-50 border border-pink-200 rounded-lg">
+                  <span className="text-sm font-semibold text-pink-700">
+                    {selectedIds.size} producto{selectedIds.size > 1 ? 's' : ''} seleccionado{selectedIds.size > 1 ? 's' : ''}
+                  </span>
+                  <input
+                    type="number"
+                    step="0.01"
+                    placeholder="Precio (€)"
+                    value={bulkPrice}
+                    onChange={e => setBulkPrice(e.target.value)}
+                    className="w-32 p-2 border border-pink-300 rounded-lg text-sm focus:outline-none focus:border-pink-500"
+                  />
+                  <input
+                    type="number"
+                    placeholder="Stock"
+                    value={bulkStock}
+                    onChange={e => setBulkStock(e.target.value)}
+                    className="w-28 p-2 border border-pink-300 rounded-lg text-sm focus:outline-none focus:border-pink-500"
+                  />
+                  <button
+                    onClick={handleApplyToSelected}
+                    className="px-4 py-2 bg-pink-500 text-white text-sm font-semibold rounded-lg hover:bg-pink-600 transition-colors"
+                  >
+                    Aplicar a seleccionados
+                  </button>
+                  <button
+                    onClick={() => setSelectedIds(new Set())}
+                    className="px-3 py-2 text-sm text-gray-500 hover:text-gray-700 transition-colors"
+                  >
+                    Deseleccionar todo
+                  </button>
+                </div>
+              )}
+
+              {/* Lista de Productos:
+                  - Pasamos localProducts para permitir la edición en tiempo real.
+                  - onLocalChange captura los cambios de los inputs en la tabla.
+                  - onSaveAll dispara la petición Bulk al backend.
+              */}
+              <div className="overflow-x-auto">
+                  <ProductsList
+                    products={localProducts}
+                    onEdit={handleEdit}
+                    onDelete={handleDeleteClick}
+                    onLocalChange={handleLocalChange}
+                    onSaveAll={handleBulkSave}
+                    selectedIds={selectedIds}
+                    onToggleSelect={handleToggleSelect}
+                    onToggleSelectAll={handleToggleSelectAll}
+                  />
+                  <PaginationControls 
+                      currentPage={currentPage}
+                      lastPage={products?.last_page}
+                      setCurrentPage={setCurrentPage}
+                      from={products?.from}
+                      to={products?.to}
+                      total={products?.total}
+                  />
+              </div>
             </div>
           </div>
+          <Footer />
         </main>
       </div>
-
-      <Footer />
 
       {/* Modal Formulario Individual */}
       <Modal
