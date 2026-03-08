@@ -198,7 +198,7 @@ export default function CheckoutPage() {
       <CheckoutHeader />
 
       <div className="max-w-6xl mx-auto px-6 py-10 pt-[80px] grid grid-cols-1 lg:grid-cols-2 gap-12">
-        <div className="order-1 lg:order-2">
+        <div className="order-2 lg:order-2">
           <div className="lg:sticky lg:top-24">
             <OrderSummary selectedShippingMethod={currentShippingMethod} />
             
@@ -214,7 +214,7 @@ export default function CheckoutPage() {
           </div>
         </div>
 
-        <div className="space-y-10 order-2 lg:order-1">
+        <div className="space-y-10 order-1 lg:order-1">
           {/* ... (Formularios se mantienen igual) ... */}
           <EmailCheckout onCustomerLoaded={setCustomer} />
           <BillingForm
