@@ -48,7 +48,7 @@ const BillingForm = ({
       setIsLoadingCP(true);
       try {
         // Llamada al nuevo endpoint que estás creando
-        const res = await getAbsolute(`/postal-codes/search/${cpValue}`);
+        const res = await getAbsolute(`/postal-codes/lookup/${cpValue}`);
         const data = res.data; 
 
         if (data && data.city) {
