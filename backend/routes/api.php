@@ -145,6 +145,9 @@ Route::get('/categories/{categoryId}/products', [ProductController::class,'listB
 Route::prefix('customers')->group(function () {
     Route::post('/', [CustomerController::class, 'create']);
     Route::get('/', [CustomerController::class, 'list']);
+     Route::get('/email/{email}', [CustomerController::class, 'show']);   // Consultar por email
+    Route::put('/email/{email}', [CustomerController::class, 'update']); // Modificar por email
+
     Route::get('/{id}', [CustomerController::class, 'showById']);
     Route::put('/{id}', [CustomerController::class, 'updateById']);
     Route::delete('/{id}', [CustomerController::class, 'destroyById']);

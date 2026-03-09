@@ -8,7 +8,7 @@ use Illuminate\Support\Facades\Log;
 use Illuminate\Validation\ValidationException;
 use App\Services\PayPalService;
 use App\Services\MailService;
-
+use App\Handlers\PostalCodeHandler;
 use App\Repositories\OrderRepository;
 use App\Repositories\OrderItemRepository;
 use App\Repositories\PaymentRepository;
@@ -86,7 +86,9 @@ class OrderHandler
                 throw new ValidationException($validator);
             }
 
-            $postalCode = $this->postalCodes->findByCode($customerData['postal_code']);
+           // Pon:
+        $postalCodeHandler = app(\App\Handlers\PostalCodeHandler::class);
+        $postalCode = $postalCodeHandler->lookupOrCreate($customerData['postal_code']);
             if (!$postalCode) {
                 throw new \Exception('Código postal del cliente no válido');
             }
@@ -119,7 +121,8 @@ class OrderHandler
             // =======================
             // DIRECCIÓN DE ENVÍO
             // =======================
-            $deliveryPostal = $this->postalCodes->findByCode($data['delivery']['postal_code']);
+            $deliveryPostal = $postalCodeHandler->lookupOrCreate($data['delivery']['postal_code']);
+
             if (!$deliveryPostal) {
                 throw new \Exception('Código postal de entrega no válido');
             }
