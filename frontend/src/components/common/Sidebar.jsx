@@ -18,9 +18,9 @@ const navigation = [
   { name: 'Usuarios', icon: Users, path: '/admin/users', roles: ['admin'] },
 ];
 
-const bottomNavigation = [
+/*const bottomNavigation = [
   { name: 'Ayuda', icon: HelpCircle, path: '/help' },
-];
+];*/
 
 const NavItem = ({ item }) => {
   const Icon = item.icon;

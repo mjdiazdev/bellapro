@@ -66,12 +66,12 @@ export default function Header() {
       {/* Acciones derecha */}
       <div className="flex items-center space-x-4 relative" ref={menuRef}>
         
-        {/* Configuración */}
+        {/* Configuración 
         <button className="text-gray-500 hover:text-gray-700 transition-colors">
           <Settings className="h-5 w-5" />
         </button>
-
-        {/* Notificaciones */}
+        */}
+        {/* Notificaciones 
         <button className="text-gray-500 hover:text-gray-700 transition-colors relative">
           <BellRing className="h-5 w-5" />
           <span className="absolute -top-1 -right-1 flex h-2 w-2">
@@ -79,7 +79,7 @@ export default function Header() {
             <span className="relative inline-flex rounded-full h-2 w-2 bg-red-500"></span>
           </span>
         </button>
-
+        */}
         {/* Avatar como botón */}
         <button
           onClick={() => setOpenMenu(!openMenu)}
