@@ -37,8 +37,8 @@ class CategoryHandler
         );
         $writer = new Writer($renderer);
 
-        //$frontendUrl = env('FRONTEND_URL', 'http://72.61.111.16');
-        //$qrContent = $frontendUrl . '/store?qr=' . $category->code;
+        $frontendUrl = env('FRONTEND_URL', 'http://72.61.111.16');
+        $qrContent = $frontendUrl . '/store?qr=' . $category->code;
     //    $qrContent = 'http://72.61.111.16/store?qr=' . $category->code;
 
         // Generar SVG del QR
