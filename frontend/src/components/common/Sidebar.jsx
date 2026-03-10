@@ -19,7 +19,7 @@ const navigation = [
 ];
 
 const bottomNavigation = [
-  { name: 'Ayuda', icon: HelpCircle, path: '/help' },
+  //{ name: 'Ayuda', icon: HelpCircle, path: '/help' },
 ];
 
 const NavItem = ({ item }) => {
