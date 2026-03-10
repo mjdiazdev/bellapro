@@ -12,7 +12,8 @@ class MailService
 
     public function __construct()
     {
-        $this->apiKey = env('BREVO_API_KEY');
+      $this->apiKey = config('services.brevo.api_key');
+
     }
 
     public function sendPurchaseMail(string $email, array $orderData): void
