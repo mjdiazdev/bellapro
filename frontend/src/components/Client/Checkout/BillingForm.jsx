@@ -59,6 +59,9 @@ const BillingForm = ({
           // Esto asegura que el select de Ciudad tenga el nombre listo para mostrar
           const citiesRes = await getAbsolute(`/cities/province/${provinceId}`);
           setCities(citiesRes.data || []);
+          // Después de obtener citiesRes, añade:
+const provincesRes = await getAbsolute("/provinces");
+setProvinces(provincesRes.data || []);
 
           // 2. Actualizamos el estado completo del formulario
           setBillingForm(prev => ({
