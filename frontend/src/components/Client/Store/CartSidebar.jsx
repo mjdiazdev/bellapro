@@ -14,7 +14,7 @@ export default function CartSidebar({ onCheckout }) {
   const total = subtotal; // puedes añadir impuestos/envío si quieres
 
   return (
-    <aside className="rounded-2xl shadow-sm border border-gray-100 p-6">
+    <aside className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6">
       <h2 className="text-lg font-semibold mb-4">Lista de compras</h2>
       <hr />
 

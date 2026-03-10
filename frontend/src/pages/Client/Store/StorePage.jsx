@@ -85,6 +85,7 @@ export default function StorePage() {
   const handleStockAlert = (title, message) => {
     setStockModal({ open: true, title, message });
   };
+  
 
   return (
     <div className="min-h-screen bg-pink-50 font-sans">
@@ -95,15 +96,17 @@ export default function StorePage() {
         <div className="bg-[#fffafc] rounded-3xl p-6 md:p-8 shadow-sm">
 
           {/* BUSCADOR SUPERIOR */}
-          <div className="mb-6 relative w-full">
-            <Search className="absolute left-4 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
-            <input
-              type="text"
-              placeholder="Buscar producto"
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)} // Actualizamos el estado
-              className="w-full h-10 pl-11 pr-4 rounded-full border border-gray-200 text-sm placeholder-gray-400 focus:outline-none focus:border-pink"
-            />
+          <div className="sticky top-[72px] z-30 bg-[#fffafc] pb-4 -mx-2 px-2 shadow-[0_2px_10px_-4px_rgba(0,0,0,0.05)]">
+            <div className="relative w-full">
+              <Search className="absolute left-4 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
+              <input
+                type="text"
+                placeholder="Buscar producto"
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+                className="w-full h-10 pl-11 pr-4 rounded-full border border-gray-200 text-sm placeholder-gray-400 focus:outline-none focus:border-pink shadow-sm bg-white"
+              />
+            </div>
           </div>
 
           {/* CONTENIDO PRINCIPAL */}
@@ -147,7 +150,7 @@ export default function StorePage() {
             </div>
 
             {/* CARRITO */}
-            <div className="sticky top-24 h-fit">
+            <div className="sticky top-[135px] h-fit transition-all duration-300 pt-2">
               <CartSidebar
                 items={items}
                 subtotal={subtotal}
