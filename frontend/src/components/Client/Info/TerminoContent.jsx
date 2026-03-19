@@ -8,7 +8,7 @@ export const TerminoContent = () => (
         <li>C.I.F.: A78928017</li>
         <li>Calle Argumosa, 20 E 28012 Madrid (España)</li>
         <li>Teléfono: 91 468 23 14</li>
-        <li>Correo electrónico: comercial@bellapro.es</li>
+        <li>Correo electrónico: info@bella-online.es</li>
         <li>Al portal se accede a través de la dirección: www.bellapro.es</li>
         <li>Propiedad de Bellapro Universal, S.A.</li>
     </ul>    

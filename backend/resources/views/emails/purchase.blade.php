@@ -131,7 +131,7 @@
                         <br><br>
 
                         <strong>Servicio técnico:</strong><br>
-                        Info@bellapro.com
+                        info@bella-online.es
                         <br><br>
 
                         <strong>Términos de servicio y Acuerdo de usuario:</strong><br>
