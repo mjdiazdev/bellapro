@@ -107,7 +107,7 @@ export default function CategoryProductsDetails({ categoryCode }) {
           <div className="overflow-x-auto shadow-sm rounded-lg border border-gray-200">
             <table className="w-full text-left bg-white border-collapse">
               {/* thead con sticky para que no se pierda al bajar */}
-              <thead className="bg-gray-800 text-white sticky top-0">
+              <thead className="bg-pink text-white sticky top-0">
                 <tr>
                   <th className="p-3 text-sm font-semibold">Nombre</th>
                   <th className="p-3 text-sm font-semibold">Referencia</th>
@@ -120,7 +120,7 @@ export default function CategoryProductsDetails({ categoryCode }) {
                     <td className="p-3 text-sm font-medium text-gray-800">{p.name}</td>
                     <td className="p-3 text-sm text-gray-600 font-mono">{p.reference}</td>
                     <td className="p-3 text-sm text-gray-800 text-right font-bold">
-                      ${Number(p.price).toLocaleString()}
+                      €{Number(p.price).toLocaleString()}
                     </td>
                   </tr>
                 ))}

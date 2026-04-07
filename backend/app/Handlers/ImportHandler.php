@@ -34,7 +34,7 @@ class ImportHandler
             ];
         } catch (\Exception $e) {
             // Capturamos cualquier error de formato o de base de datos
-            throw new \Exception("Error procesando el archivo: " . $e->getMessage());
+            throw new \Exception($e->getMessage());
         }
     }
 }

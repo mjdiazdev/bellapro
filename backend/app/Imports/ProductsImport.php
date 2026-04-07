@@ -17,6 +17,8 @@ use Illuminate\Support\Facades\DB;
 class ProductsImport implements ToCollection, WithHeadingRow
 {
     private $categoryHandler;
+    // Definimos las columnas que el sistema espera obligatoriamente
+    private $requiredHeaders = ['referencia', 'categoria', 'precio', 'cantidad', 'descripcion'];
 
     /**
      * Se inyecta CategoryHandler para asegurar que las categorías nuevas
@@ -32,6 +34,30 @@ class ProductsImport implements ToCollection, WithHeadingRow
      */
     public function collection(Collection $rows)
     {
+        // --- NUEVA VALIDACIÓN DE CABECERAS ---
+        if ($rows->isEmpty()) {
+            throw new \Exception("El archivo está vacío.");
+        }
+
+        $firstRow = $rows->first()->toArray();
+        $missing = [];
+
+        foreach ($this->requiredHeaders as $header) {
+            if (!array_key_exists($header, $firstRow)) {
+                $missing[] = strtoupper($header);
+            }
+        }
+
+        if (!empty($missing)) {
+            //$list = implode(', ', $missing);
+            $msj = "Formato incorrecto: Para procesar tu carga masiva, el sistema necesita que las columnas tengan estos nombres exactos, en el caso de:\n\n" .
+           implode("\n", $missing) .
+           "\n\n.Por favor, renombra las cabeceras en tu archivo Excel y vuelve a intentarlo.";
+
+    throw new \Exception($msj);
+        }
+        // ---------------------------------------
+
         foreach ($rows as $row)
         {
             if (!isset($row['referencia']) || empty($row['referencia'])) continue;

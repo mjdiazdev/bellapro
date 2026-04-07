@@ -15,6 +15,7 @@ export default function BulkImportButton({ onImportSuccess, onImportError }) {
     const file = e.target.files[0];
     if (!file) return;
 
+    // Validación básica de extensión
     const allowedExtensions = ['csv', 'xlsx', 'xls'];
     const fileExtension = file.name.split('.').pop().toLowerCase();
     
@@ -32,8 +33,11 @@ export default function BulkImportButton({ onImportSuccess, onImportError }) {
       onImportSuccess(res.message || "Importación completada");
       e.target.value = ''; // Limpiar input
     } catch (error) {
-      const msg = error.response?.data?.error || "Error al procesar el archivo";
-      onImportError(msg);
+      const errorData = error.response?.data;
+      const detailedMessage = errorData?.error || errorData?.message || "Error al procesar el formato del archivo";
+      
+      onImportError(detailedMessage);
+      e.target.value = '';
     } finally {
       setLoading(false);
     }

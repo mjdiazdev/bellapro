@@ -280,7 +280,7 @@ export default function ProductsListPage() {
   };
 
   const handleImportError = (message) => {
-    setAlertType("error");
+    setAlertType("warning");
     setAlertMessage(message);
     alertModal.show();
   };
