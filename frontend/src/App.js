@@ -1,6 +1,7 @@
 import React from 'react';
 import {BrowserRouter, Routes, Route, Navigate} from 'react-router-dom';
 import { CartProvider } from './context/CartContext';
+import ScrollToTop from './components/common/ScrollToTop';
 
 import Login from './pages/Login';
 import Categories from './pages/Admin/Categories/CategoriesListPage';
@@ -44,6 +45,7 @@ function RequireAuth({ children, allowedRoles = [] }) {
 export default function App() {
   return (
     <BrowserRouter>
+      <ScrollToTop />
       <CartProvider>
         <Routes>
           {/* CLIENTE */}

@@ -107,6 +107,29 @@ class DistributionCenterRepository
     }
 
     /**
+     * Verificar si un código postal está directamente asignado a algún centro de distribución.
+     * Solo el CP exacto cuenta — ciudad/provincia NO son suficientes.
+     */
+    public function isPostalCodeDirectlyCovered(string $postalCode): bool
+    {
+        $postalCodeModel = \App\Models\PostalCode::where('code', $postalCode)->first();
+        if (!$postalCodeModel) return false;
+
+        return \App\Models\DistributionCenterLocation::where('postal_code_id', $postalCodeModel->id)->exists();
+    }
+
+    /**
+     * Devolver los métodos de envío por defecto cuando el CP no tiene cobertura directa.
+     * Solo se devuelve Envío Estándar — el Ultrarrápido/Express requiere centro asignado.
+     */
+    public function getDefaultShippingMethods(): \Illuminate\Database\Eloquent\Collection
+    {
+        return \App\Models\ShippingMethod::where('name', 'Envío Estándar')
+            ->where('status', true)
+            ->get();
+    }
+
+    /**
      * Buscar el centro de distribución más cercano según el código postal (CP).
      */
     public function findNearestCenter(string $postalCode): ?DistributionCenter
@@ -116,11 +139,9 @@ class DistributionCenterRepository
             ->where('code', $postalCode)
             ->first();
 
-        // Si el CP no existe en nuestra DB, retornamos el primer centro por defecto
+        // Si el CP no existe en la DB no hay cobertura — el handler decide qué mostrar
         if (!$reference) {
-            return DistributionCenter::with(['shippingMethods' => function($query) {
-                $query->where('shipping_methods.status', true);
-            }])->first();
+            return null;
         }
 
         $cityId = $reference->city_id;

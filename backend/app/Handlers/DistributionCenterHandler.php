@@ -106,20 +106,26 @@ class DistributionCenterHandler
 
     /**
      * Obtener métodos de envío disponibles según el código postal del carrito.
+     *
+     * Regla de negocio:
+     * - Envío Estándar: siempre disponible para cualquier CP.
+     * - Envío Express (Ultrarrápido): solo si el CP está directamente asignado
+     *   a un centro de distribución, garantizando así la cobertura de entrega rápida.
      */
     public function getMethodsByPostalCode(string $postalCode)
     {
         $postalCode = trim($postalCode);
         if (empty($postalCode)) return collect();
 
-        // El repositorio ahora busca en la tabla de múltiples ubicaciones
-        $center = $this->repository->findNearestCenter($postalCode);
-
-        if (!$center) {
-            throw new \Exception("Lo sentimos, no tenemos cobertura de envío para esta zona.");
+        // Solo mostramos Express si el CP pertenece directamente a un centro
+        if ($this->repository->isPostalCodeDirectlyCovered($postalCode)) {
+            $center = $this->repository->findNearestCenter($postalCode);
+            if ($center && $center->shippingMethods->isNotEmpty()) {
+                return $center->shippingMethods;
+            }
         }
 
-        // Retorna los métodos (estándar, express, etc.) que ese centro tiene permitidos
-        return $center->shippingMethods;
+        // CP fuera de cobertura directa → solo Envío Estándar
+        return $this->repository->getDefaultShippingMethods();
     }
 }
