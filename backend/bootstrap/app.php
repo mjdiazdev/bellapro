@@ -30,15 +30,28 @@ return Application::configure(basePath: dirname(__DIR__))
             ], 401);
         });
 
+        // Notificación por email cuando ocurre un error 500 en producción
+        $exceptions->report(function (\Throwable $e) {
+            if (app()->environment('production') && !($e instanceof \Illuminate\Auth\AuthenticationException)) {
+                try {
+                    \Illuminate\Support\Facades\Mail::raw(
+                        implode("\n", [
+                            "Error en BellaPro: " . get_class($e),
+                            "Mensaje: " . $e->getMessage(),
+                            "Archivo: " . $e->getFile() . " (línea " . $e->getLine() . ")",
+                            "URL: " . request()->fullUrl(),
+                            "Hora: " . now()->format('d/m/Y H:i:s'),
+                        ]),
+                        function ($message) {
+                            $message->to('estudio@agenciatlc.es')
+                                    ->subject('[BellaPro] Error en producción: ' . request()->path());
+                        }
+                    );
+                } catch (\Throwable $mailError) {
+                    // Si el mail falla, no interrumpimos el flujo
+                }
+            }
+        });
+
     })
     ->create();
-
-    $app->config->set('cors', [
-        'paths' => ['api/*'],
-        'allowed_methods' => ['*'],
-        'allowed_origins' => ['*'],
-        'allowed_headers' => ['*'],
-        'exposed_headers' => [],
-        'max_age' => 0,
-        'supports_credentials' => false,
-    ]);
