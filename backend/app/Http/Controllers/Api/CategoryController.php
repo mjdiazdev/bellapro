@@ -138,6 +138,40 @@ class CategoryController extends Controller
     }
 
     /**
+     * Regenerar el QR de una categoría por ID.
+     */
+    public function regenerateQr(CategoryHandler $handler, $id)
+    {
+        try {
+            $category = $handler->regenerateQr((int) $id);
+
+            return response()->json([
+                'message' => 'QR regenerado correctamente',
+                'data' => $category
+            ]);
+        } catch (\Exception $e) {
+            return response()->json(['message' => $e->getMessage()], 422);
+        }
+    }
+
+    /**
+     * Regenerar el QR de una categoría por código.
+     */
+    public function regenerateQrByCode(CategoryHandler $handler, $code)
+    {
+        try {
+            $category = $handler->regenerateQrByCode($code);
+
+            return response()->json([
+                'message' => 'QR regenerado correctamente',
+                'data' => $category
+            ]);
+        } catch (\Exception $e) {
+            return response()->json(['message' => $e->getMessage()], 422);
+        }
+    }
+
+    /**
      * Descargar un PDF con todos los códigos QR de categorías.
      *
      * @return mixed

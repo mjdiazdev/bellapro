@@ -111,6 +111,8 @@ Route::middleware(['auth:sanctum', 'role:admin'])->group(function () {
     Route::get('/categories/{id}', [CategoryController::class,'show']);
     Route::put('/categories/{id}', [CategoryController::class,'update']);
     Route::delete('/categories/{id}', [CategoryController::class,'destroy']);
+    Route::post('/categories/{id}/regenerate-qr', [CategoryController::class,'regenerateQr']);
+    Route::post('/categories/code/{code}/regenerate-qr', [CategoryController::class,'regenerateQrByCode']);
 
     // Productos
     Route::post('/products', [ProductController::class,'create']);

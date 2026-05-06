@@ -30,6 +30,39 @@ class CategoryHandler
         // Crear categoría en BD
         $category = $this->categories->create($data);
 
+        return $this->buildQr($category);
+    }
+
+    /**
+     * Regenerar el QR de una categoría existente por ID.
+     */
+    public function regenerateQr(int $id)
+    {
+        $category = $this->categories->findById($id);
+
+        if (!$category) {
+            throw new \Exception("Categoría no encontrada.");
+        }
+
+        return $this->buildQr($category);
+    }
+
+    /**
+     * Regenerar el QR de una categoría existente por código.
+     */
+    public function regenerateQrByCode(string $code)
+    {
+        $category = $this->categories->findByCode($code);
+
+        if (!$category) {
+            throw new \Exception("Categoría no encontrada con código: {$code}");
+        }
+
+        return $this->buildQr($category);
+    }
+
+    private function buildQr($category)
+    {
         // Preparar renderer para SVG (QR code)
         $renderer = new ImageRenderer(
             new RendererStyle(300),
@@ -39,7 +72,6 @@ class CategoryHandler
 
         $frontendUrl = env('FRONTEND_URL', 'http://72.61.111.16');
         $qrContent = $frontendUrl . '/store?qr=' . $category->code;
-    //    $qrContent = 'http://72.61.111.16/store?qr=' . $category->code;
 
         // Generar SVG del QR
         $qrImage = $writer->writeString($qrContent);

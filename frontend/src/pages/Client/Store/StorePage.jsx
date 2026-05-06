@@ -135,7 +135,7 @@ export default function StorePage() {
                 <p className="text-center text-gray-500 animate-pulse py-10">Cargando productos...</p>
               ) : (
                 <>
-                  {category && <h2 className="text-xl font-bold text-gray-800 mb-4">{category.name}</h2>}
+                  {category && <h2 className="text-xl font-bold text-gray-800 mb-4">Página {category.code}</h2>}
 
                   {catalogProducts.map(product => {
                     // 1. Buscamos si este producto ya está en el carrito para saber su cantidad
