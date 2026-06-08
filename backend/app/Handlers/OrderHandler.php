@@ -187,8 +187,6 @@ class OrderHandler
                 'status'   => 'pending'
             ]);
 
-            DB::commit();
-
             // =======================
             // LÓGICA DE PAYPAL
             // =======================
@@ -197,16 +195,15 @@ class OrderHandler
                 $paypalService = new PayPalService();
                 $paypalOrder = $paypalService->createOrder($totalParaPaypal);
 
-                // VALIDACIÓN CRÍTICA:
                 if (!isset($paypalOrder['id'])) {
-                    // Logueamos el error para que tú como dev sepas qué pasó realmente
                     Log::error("Error de PayPal: ", (array)$paypalOrder);
                     throw new \Exception('No se pudo conectar con PayPal. Por favor, intenta más tarde.');
                 }
 
                 $this->payments->updateStatus($order->id, 'pending', ['paypal_order_id' => $paypalOrder['id']]);
 
-                // Buscamos el link de aprobación de forma segura
+                DB::commit();
+
                 $approveLink = collect($paypalOrder['links'])->firstWhere('rel', 'approve');
 
                 return [
@@ -235,11 +232,15 @@ class OrderHandler
                     'url_ko'       => $frontendUrl . '/pago/redsys-error',
                 ]);
 
+                DB::commit();
+
                 return [
                     'order_id' => $order->id,
                     'redsys'   => $redsysParams,
                 ];
             }
+
+            DB::commit();
 
             return ['order' => $order];
 
