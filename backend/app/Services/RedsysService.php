@@ -44,7 +44,7 @@ class RedsysService
             'Ds_Merchant_Currency'        => $moneda,
             'Ds_Merchant_TransactionType' => '0',
             'Ds_Merchant_Terminal'        => (string) $terminal,
-            'Ds_Merchant_MerchantURL'     => env('APP_URL') . '/api/redsys/notification',
+            'Ds_Merchant_MerchantURL'     => env('REDSYS_NOTIFICATION_URL', env('APP_URL') . '/api/redsys/notification'),
             'Ds_Merchant_UrlOK'           => $data['url_ok'],
             'Ds_Merchant_UrlKO'           => $data['url_ko'],
         ];
