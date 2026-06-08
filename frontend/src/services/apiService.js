@@ -17,7 +17,8 @@ export const BASE_API_ROUTES = {
   paymentMethods: "/payment-methods",
   orders: "/orders",
   orderItems: "/order-items",
-  distributionCenters: "/distribution-centers"
+  distributionCenters: "/distribution-centers",
+  catalogs: "/catalogs"
 };
 
 /**

@@ -8,12 +8,23 @@ import { useSearchParams, useNavigate } from "react-router-dom";
 import { getQrData } from "../../../services/apiService";
 import { useCart } from "../../../context/CartContext";
 import Modal from '../../../components/common/Modal';
+import api from "../../../services/api";
+
+const BACKEND_URL = process.env.REACT_APP_BACKEND_URL;
 
 export default function StorePage() {
   const [catalogProducts, setCatalogProducts] = useState([]); // productos de la categoría actual
   const [category, setCategory] = useState(null);
   const [loading, setLoading] = useState(false);
   const [searchTerm, setSearchTerm] = useState("");
+  const [activeCatalog, setActiveCatalog] = useState(null);
+
+  useEffect(() => {
+    api.get("/catalogs").then((res) => {
+      const first = (res.data.catalogs ?? [])[0] ?? null;
+      setActiveCatalog(first);
+    }).catch(() => {});
+  }, []);
 
   const [searchParams] = useSearchParams();
   const qrCode = searchParams.get("qr");
@@ -101,14 +112,26 @@ export default function StorePage() {
               <p className="text-sm font-semibold text-gray-800">Descarga nuestro catálogo completo</p>
               <p className="text-xs text-gray-500 mt-0.5">Todos nuestros productos en un solo documento</p>
             </div>
-            <button
-              disabled
-              className="flex items-center gap-2 bg-pink text-white text-sm font-medium px-5 py-2.5 rounded-full opacity-50 cursor-not-allowed"
-              title="Próximamente disponible"
-            >
-              <Download className="h-4 w-4" />
-              Descargar catálogo
-            </button>
+            {activeCatalog ? (
+              <a
+                href={`${BACKEND_URL}/api/catalogs/${activeCatalog.id}/download`}
+                target="_blank"
+                rel="noreferrer"
+                className="flex items-center gap-2 bg-pink text-white text-sm font-medium px-5 py-2.5 rounded-full hover:opacity-90 transition"
+              >
+                <Download className="h-4 w-4" />
+                Descargar catálogo
+              </a>
+            ) : (
+              <button
+                disabled
+                className="flex items-center gap-2 bg-pink text-white text-sm font-medium px-5 py-2.5 rounded-full opacity-40 cursor-not-allowed"
+                title="No hay catálogo disponible aún"
+              >
+                <Download className="h-4 w-4" />
+                Descargar catálogo
+              </button>
+            )}
           </div>
 
           {/* BUSCADOR SUPERIOR */}

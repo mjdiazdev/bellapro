@@ -7,6 +7,7 @@ use Illuminate\Support\Facades\Validator;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Validation\ValidationException;
 use App\Services\PayPalService;
+use App\Services\RedsysService;
 use App\Services\MailService;
 use App\Handlers\PostalCodeHandler;
 use App\Repositories\OrderRepository;
@@ -217,6 +218,29 @@ class OrderHandler
                 ];
             }
 
+            // =======================
+            // LÓGICA DE REDSYS (TPV)
+            // =======================
+            if ($data['payment']['method'] === 'redsys') {
+                $redsysService = new RedsysService();
+
+                $frontendUrl  = env('FRONTEND_URL', 'http://localhost:3000');
+                $orderNumber  = sprintf('%012d', $order->id);
+                $amountCents  = (int) round($totalFinal * 100);
+
+                $redsysParams = $redsysService->initiatePayment([
+                    'order_number' => $orderNumber,
+                    'amount_cents' => $amountCents,
+                    'url_ok'       => $frontendUrl . '/pago/redsys-ok',
+                    'url_ko'       => $frontendUrl . '/pago/redsys-error',
+                ]);
+
+                return [
+                    'order_id' => $order->id,
+                    'redsys'   => $redsysParams,
+                ];
+            }
+
             return ['order' => $order];
 
         } catch (\Exception $e) {
@@ -278,7 +302,7 @@ class OrderHandler
     /**
      * Prepara los datos formateados para el servicio de correo
      */
-    private function prepareOrderMailData($order): array
+    public function prepareOrderMailData($order): array
     {
         $order->load(['items.product', 'distributionCenterMethod.shippingMethod']);
 

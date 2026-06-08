@@ -1,8 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { ReactComponent as Logo } from "../../assets/logo.svg";
-import { 
-  LayoutDashboard, Layers, ShoppingBag, Users, Briefcase, 
-  Truck, Package, ClipboardList, HelpCircle, Menu 
+import {
+  LayoutDashboard, Layers, ShoppingBag, Users, Briefcase,
+  Truck, Package, ClipboardList, FileText, Menu
 } from 'lucide-react';
 import { NavLink } from 'react-router-dom';
 
@@ -16,6 +16,7 @@ const navigation = [
   { name: 'Centros de distribución', icon: Package, path: '/admin/distribution-centers', roles: ['admin'] },
   { name: 'Pedidos', icon: ClipboardList, path: '/admin/orders', roles: ['admin', 'coordinador'] },
   { name: 'Usuarios', icon: Users, path: '/admin/users', roles: ['admin'] },
+  { name: 'Catálogos', icon: FileText, path: '/admin/catalogs', roles: ['admin'] },
 ];
 
 const bottomNavigation = [

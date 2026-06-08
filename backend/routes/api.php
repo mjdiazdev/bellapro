@@ -14,6 +14,8 @@ use App\Http\Controllers\Api\OrderController;
 use App\Http\Controllers\Api\DistributionCenterController;
 use App\Http\Controllers\Api\ImportController;
 use App\Http\Controllers\Api\DashboardController;
+use App\Http\Controllers\Api\RedsysController;
+use App\Http\Controllers\Api\CatalogController;
 
 /*
 |--------------------------------------------------------------------------
@@ -142,6 +144,25 @@ Route::middleware(['auth:sanctum', 'role:admin'])->group(function () {
 
 // Productos por categoría
 Route::get('/categories/{categoryId}/products', [ProductController::class,'listByCategory']);
+
+// -----------------------------------------------------------------------
+// REDSYS — webhook público (sin auth, sin CSRF — rutas API son stateless)
+// -----------------------------------------------------------------------
+Route::post('/redsys/notification', [RedsysController::class, 'notification']);
+
+// -----------------------------------------------------------------------
+// CATÁLOGOS PDF — rutas públicas
+// -----------------------------------------------------------------------
+Route::get('/catalogs', [CatalogController::class, 'index']);
+Route::get('/catalogs/{id}/download', [CatalogController::class, 'download']);
+
+// CATÁLOGOS — rutas admin
+Route::middleware(['auth:sanctum', 'role:admin'])->group(function () {
+    Route::get('/catalogs/all', [CatalogController::class, 'all']);
+    Route::post('/catalogs', [CatalogController::class, 'store']);
+    Route::post('/catalogs/{id}', [CatalogController::class, 'update']); // POST con _method=PUT para FormData
+    Route::delete('/catalogs/{id}', [CatalogController::class, 'destroy']);
+});
 
 // Rutas para clientes
 Route::prefix('customers')->group(function () {

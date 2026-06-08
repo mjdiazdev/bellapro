@@ -121,11 +121,24 @@ class DistributionCenterRepository
     /**
      * Devolver los métodos de envío por defecto cuando el CP no tiene cobertura directa.
      * Solo se devuelve Envío Estándar — el Ultrarrápido/Express requiere centro asignado.
+     *
+     * Se carga a través de la relación BelongsToMany para que el pivot.id esté disponible
+     * en el frontend (necesario para dist_center_shipping_method_id al crear la orden).
      */
     public function getDefaultShippingMethods(): \Illuminate\Database\Eloquent\Collection
     {
-        return \App\Models\ShippingMethod::where('name', 'Envío Estándar')
-            ->where('status', true)
+        $center = DistributionCenter::whereHas('shippingMethods', function ($q) {
+            $q->where('shipping_methods.name', 'Envío Estándar')
+              ->where('shipping_methods.status', true);
+        })->first();
+
+        if (!$center) {
+            return collect();
+        }
+
+        return $center->shippingMethods()
+            ->where('shipping_methods.name', 'Envío Estándar')
+            ->where('shipping_methods.status', true)
             ->get();
     }
 

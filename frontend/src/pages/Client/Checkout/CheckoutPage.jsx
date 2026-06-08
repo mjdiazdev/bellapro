@@ -146,9 +146,33 @@ export default function CheckoutPage() {
 
       if (selectedPayment.method === 'paypal' && result.paypal?.approve_url) {
         localStorage.setItem("pending_order_id", result.order_id);
-        
-        // Al redirigir fuera de la web, no es necesario setear isProcessing a false
         window.location.href = result.paypal.approve_url;
+
+      } else if (selectedPayment.method === 'redsys' && result.redsys) {
+        localStorage.setItem("redsys_order_id", result.order_id);
+
+        // Auto-submit hacia la pasarela Redsys (igual que en formulario Hosted)
+        const { url, merchantParameters, signature, signatureVersion } = result.redsys;
+        const form = document.createElement('form');
+        form.method = 'POST';
+        form.action = url;
+
+        const fields = {
+          Ds_SignatureVersion:   signatureVersion,
+          Ds_MerchantParameters: merchantParameters,
+          Ds_Signature:          signature,
+        };
+
+        Object.entries(fields).forEach(([name, value]) => {
+          const input = document.createElement('input');
+          input.type  = 'hidden';
+          input.name  = name;
+          input.value = value;
+          form.appendChild(input);
+        });
+
+        document.body.appendChild(form);
+        form.submit();
 
       } else {
         clearCart();

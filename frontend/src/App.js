@@ -15,7 +15,10 @@ import Customers from './pages/Admin/Customers/CustomersListPage';
 import Orders from './pages/Admin/Orders/OrdersListPage';
 import DistributionCentersList from './pages/Admin/DistributionCenters/DistributionCentersPage';
 import Thanks from './pages/Client/Checkout/ThanksPage';
+import RedsysSuccessPage from './pages/Client/Checkout/RedsysSuccessPage';
+import RedsysErrorPage from './pages/Client/Checkout/RedsysErrorPage';
 import InfoPage from './pages/Client/Info/InfoPage';
+import CatalogsPage from './pages/Admin/Catalogs/CatalogsPage';
 import NotFoundPage from './pages/NotFoundPage';
 import Dashboard from './pages/Admin/Dashboard/DashboardPage';
 /**
@@ -98,12 +101,19 @@ export default function App() {
               <Customers/>
             </RequireAuth>
           } />
+          <Route path="/admin/catalogs" element={
+            <RequireAuth allowedRoles={['admin']}>
+              <CatalogsPage/>
+            </RequireAuth>
+          } />
 
           {/* CARRO DE COMPRAS & OTROS */}
           <Route path="/store" element={<StorePage />} />
           <Route path="/checkout" element={<CheckoutPage />} />
           <Route path="/thanks" element={<Thanks />} />
           <Route path="/checkout/payment-confirm" element={<PaymentConfirmPage />} />
+          <Route path="/pago/redsys-ok" element={<RedsysSuccessPage />} />
+          <Route path="/pago/redsys-error" element={<RedsysErrorPage />} />
 
           <Route path="*" element={<NotFoundPage />} />
         </Routes>
