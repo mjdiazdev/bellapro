@@ -272,11 +272,10 @@ export default function CatalogsPage() {
 
       {/* Modal de confirmación de borrado */}
       <ConfirmModal
-        isOpen={!!toDelete}
-        title="Eliminar catálogo"
+        open={!!toDelete}
         message={`¿Estás seguro de que quieres eliminar "${toDelete?.name}"? Esta acción no se puede deshacer.`}
         onConfirm={handleDelete}
-        onCancel={() => setToDelete(null)}
+        onClose={() => setToDelete(null)}
       />
     </div>
   );
