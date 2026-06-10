@@ -16,6 +16,7 @@ use App\Http\Controllers\Api\ImportController;
 use App\Http\Controllers\Api\DashboardController;
 use App\Http\Controllers\Api\RedsysController;
 use App\Http\Controllers\Api\CatalogController;
+use App\Http\Controllers\Api\CouponController;
 
 /*
 |--------------------------------------------------------------------------
@@ -160,8 +161,21 @@ Route::get('/catalogs/{id}/download', [CatalogController::class, 'download']);
 Route::middleware(['auth:sanctum', 'role:admin'])->group(function () {
     Route::get('/catalogs/all', [CatalogController::class, 'all']);
     Route::post('/catalogs', [CatalogController::class, 'store']);
-    Route::post('/catalogs/{id}', [CatalogController::class, 'update']); // POST con _method=PUT para FormData
+    Route::post('/catalogs/{id}', [CatalogController::class, 'update']);
     Route::delete('/catalogs/{id}', [CatalogController::class, 'destroy']);
+});
+
+// -----------------------------------------------------------------------
+// CUPONES — validación pública + gestión admin
+// -----------------------------------------------------------------------
+Route::post('/coupons/validate', [CouponController::class, 'validate']);
+
+Route::middleware(['auth:sanctum', 'role:admin'])->group(function () {
+    Route::get('/coupons', [CouponController::class, 'index']);
+    Route::post('/coupons', [CouponController::class, 'store']);
+    Route::put('/coupons/{id}', [CouponController::class, 'update']);
+    Route::post('/coupons/{id}/toggle', [CouponController::class, 'toggle']);
+    Route::delete('/coupons/{id}', [CouponController::class, 'destroy']);
 });
 
 // Rutas para clientes

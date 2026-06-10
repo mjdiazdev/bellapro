@@ -25,8 +25,9 @@ class MailService
                 'method_name' => $orderData['shipping']['method_name'],
                 'price'       => $orderData['shipping']['price'],
             ],
-            'iva_amount'     => $orderData['iva_amount'],
-            'total_with_iva' => $orderData['total_with_iva'],
+            'discount_amount' => $orderData['discount_amount'] ?? null,
+            'iva_amount'      => $orderData['iva_amount'],
+            'total_with_iva'  => $orderData['total_with_iva'],
         ];
 
         Mail::send('emails.purchase', ['data' => $payload], function ($message) use ($email) {

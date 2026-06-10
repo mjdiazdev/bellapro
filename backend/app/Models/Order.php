@@ -13,7 +13,8 @@ class Order extends Model
         'delivery_address', 'delivery_address_extra', 'delivery_phone',
         'delivery_postal_code_id',
         'dist_center_shipping_method_id',
-        'subtotal', 'shipping_price', 'total', 'status'
+        'subtotal', 'shipping_price', 'total', 'status',
+        'coupon_id', 'discount_amount',
     ];
 
     public function customer(): BelongsTo

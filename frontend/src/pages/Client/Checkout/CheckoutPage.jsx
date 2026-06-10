@@ -6,6 +6,7 @@ import BillingForm from "../../../components/Client/Checkout/BillingForm";
 import ShippingForm from "../../../components/Client/Checkout/ShippingForm";
 import ShippingMethod from "../../../components/Client/Checkout/ShippingMethod";
 import PaymentMethod from "../../../components/Client/Checkout/PaymentMethod";
+import CouponInput from "../../../components/Client/Checkout/CouponInput";
 import OrderSummary from "../../../components/Client/Checkout/OrderSummary";
 import Footer from "../../../components/common/Footer";
 import EmailCheckout from "../../../components/Client/Checkout/EmailCheckout";
@@ -83,6 +84,8 @@ export default function CheckoutPage() {
     setActivePostalCode(cp);
   }, [shippingDifferent, shippingForm.postal_code, billingForm.postal_code]);
 
+  const [appliedCoupon, setAppliedCoupon] = useState(null);
+
   // 1. Añadimos el estado de control de carga
   const [isProcessing, setIsProcessing] = useState(false);
 
@@ -134,8 +137,9 @@ export default function CheckoutPage() {
         })),
         payment: {
           ...selectedPayment,
-          amount: selectedPayment.amount 
-        }
+          amount: selectedPayment.amount,
+        },
+        ...(appliedCoupon ? { coupon_code: appliedCoupon.code } : {}),
       };
 
       // 5. LLAMADA AL BACKEND
@@ -205,17 +209,16 @@ export default function CheckoutPage() {
     // 2. Obtenemos el precio del envío
     const shipping = currentShippingMethod ? Number(currentShippingMethod.price) : 0;
     
-    // 3. Calculamos base + IVA (21%)
-    const totalConIva = (subtotal + shipping) * 1.21;
+    // 3. Calculamos base + IVA (21%) con descuento si hay cupón
+    const discount    = appliedCoupon ? Number(appliedCoupon.discount_amount) : 0;
+    const totalConIva = (subtotal + shipping - discount) * 1.21;
 
     // 4. Actualizamos el estado del pago
     setSelectedPayment(prev => ({
       ...prev,
       amount: totalConIva.toFixed(2)
     }));
-
-    // AGREGAMOS LAS DEPENDENCIAS AQUÍ:
-  }, [currentShippingMethod, productsInCart, setSelectedPayment]);
+  }, [currentShippingMethod, productsInCart, appliedCoupon, setSelectedPayment]);
 
   return (
     <div className="min-h-screen">
@@ -224,7 +227,10 @@ export default function CheckoutPage() {
       <div className="max-w-6xl mx-auto px-6 py-10 pt-[80px] grid grid-cols-1 lg:grid-cols-2 gap-12">
         <div className="order-2 lg:order-2">
           <div className="lg:sticky lg:top-24">
-            <OrderSummary selectedShippingMethod={currentShippingMethod} />
+            <OrderSummary
+              selectedShippingMethod={currentShippingMethod}
+              discount={appliedCoupon?.discount_amount ?? 0}
+            />
             
             {/* BOTÓN CON CONTROL DE ESTADO DE CARGA */}
             <Button 
@@ -264,6 +270,17 @@ export default function CheckoutPage() {
             selectedPayment={selectedPayment}
             setSelectedPayment={setSelectedPayment}
           />
+
+          <div>
+            <h3 className="text-sm font-medium text-gray-700 mb-2">¿Tienes un cupón de descuento?</h3>
+            <CouponInput
+              items={productsInCart.map(p => ({ product_id: p.id, quantity: p.quantity }))}
+              subtotal={productsInCart.reduce((sum, p) => sum + p.price * p.quantity, 0)}
+              appliedCoupon={appliedCoupon}
+              onCouponApplied={setAppliedCoupon}
+              onCouponRemoved={() => setAppliedCoupon(null)}
+            />
+          </div>
         </div>
       </div>
       <Footer />

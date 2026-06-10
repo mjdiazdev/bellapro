@@ -94,6 +94,17 @@
                             </td>
                         </tr>
 
+                        @if(!empty($data['discount_amount']))
+                        <tr>
+                            <td style="text-align:right; color:#e91e63; padding:4px 0;">
+                                Descuento aplicado:
+                            </td>
+                            <td style="text-align:right; padding:4px 0; color:#e91e63;">
+                                -€{{ number_format($data['discount_amount'], 2, ',', '.') }}
+                            </td>
+                        </tr>
+                        @endif
+
                         <tr>
                             <td style="text-align:right; color:#444; padding:4px 0;">
                                 IVA (21%):

@@ -18,7 +18,8 @@ export const BASE_API_ROUTES = {
   orders: "/orders",
   orderItems: "/order-items",
   distributionCenters: "/distribution-centers",
-  catalogs: "/catalogs"
+  catalogs: "/catalogs",
+  coupons:  "/coupons"
 };
 
 /**

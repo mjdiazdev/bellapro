@@ -8,6 +8,7 @@ use Illuminate\Support\Facades\Log;
 use Illuminate\Validation\ValidationException;
 use App\Services\PayPalService;
 use App\Services\RedsysService;
+use App\Handlers\CouponHandler;
 use App\Services\MailService;
 use App\Handlers\PostalCodeHandler;
 use App\Repositories\OrderRepository;
@@ -131,39 +132,58 @@ class OrderHandler
             // =======================
             // CALCULAR TOTALES
             // =======================
-            $subtotal = 0;
+            $subtotal  = 0;
+            $cartItems = [];
             foreach ($data['items'] as $item) {
-                $product = $this->products->findById($item['product_id']);
-                $subtotal += $product->price * $item['quantity'];
+                $product    = $this->products->findById($item['product_id']);
+                $unitPrice  = (float) $product->price;
+                $subtotal  += $unitPrice * $item['quantity'];
+                $cartItems[] = [
+                    'product_id' => (int) $product->id,
+                    'quantity'   => (int) $item['quantity'],
+                    'unit_price' => $unitPrice,
+                ];
 
-                // Descontar stock (Lógica global actual)
                 $nuevoStock = $product->stock->stock - $item['quantity'];
                 $product->stock()->update(['stock' => $nuevoStock]);
             }
 
-            // --- LÓGICA DE IVA 21% ---
-            $shippingPrice = $shippingRelation->price;
-            $ivaPorcentaje = 0.21;
+            // =======================
+            // CUPÓN (opcional)
+            // =======================
+            $discountAmount = 0;
+            $appliedCoupon  = null;
+            if (!empty($data['coupon_code'])) {
+                $couponHandler  = app(CouponHandler::class);
+                $appliedCoupon  = $couponHandler->validateCoupon($data['coupon_code'], $subtotal);
+                $discountAmount = $couponHandler->calculateDiscount($appliedCoupon, $cartItems, $subtotal);
+            }
 
-            $taxAmount = ($subtotal + $shippingPrice) * $ivaPorcentaje;
-            $totalFinal = $subtotal + $shippingPrice + $taxAmount;
+            // --- LÓGICA DE IVA 21% ---
+            $shippingPrice     = $shippingRelation->price;
+            $ivaPorcentaje     = 0.21;
+            $baseAfterDiscount = $subtotal + $shippingPrice - $discountAmount;
+            $taxAmount         = $baseAfterDiscount * $ivaPorcentaje;
+            $totalFinal        = $baseAfterDiscount + $taxAmount;
 
             // =======================
             // CREAR ORDEN
             // =======================
             $order = $this->orders->create([
-                'customer_id' => $customer->id,
-                'delivery_email' => $customerData['email'],
-                'delivery_name' => $data['delivery']['name'],
-                'delivery_nif' => $data['delivery']['nif'] ?? null,
-                'delivery_phone' => $data['delivery']['phone'] ?? null,
-                'delivery_address' => $data['delivery']['address'],
-                'delivery_postal_code_id' => $deliveryPostal->id,
+                'customer_id'                    => $customer->id,
+                'delivery_email'                 => $customerData['email'],
+                'delivery_name'                  => $data['delivery']['name'],
+                'delivery_nif'                   => $data['delivery']['nif'] ?? null,
+                'delivery_phone'                 => $data['delivery']['phone'] ?? null,
+                'delivery_address'               => $data['delivery']['address'],
+                'delivery_postal_code_id'        => $deliveryPostal->id,
                 'dist_center_shipping_method_id' => $data['dist_center_shipping_method_id'],
-                'subtotal' => $subtotal,
-                'shipping_price' => $shippingPrice,
-                'total' => $totalFinal,
-                'status' => 'pending'
+                'subtotal'                       => $subtotal,
+                'shipping_price'                 => $shippingPrice,
+                'total'                          => $totalFinal,
+                'status'                         => 'pending',
+                'coupon_id'                      => $appliedCoupon?->id,
+                'discount_amount'                => $discountAmount > 0 ? $discountAmount : null,
             ]);
 
             // =======================
@@ -190,6 +210,10 @@ class OrderHandler
             // =======================
             // LÓGICA DE PAYPAL
             // =======================
+            if ($appliedCoupon) {
+                app(CouponHandler::class)->incrementUsage($appliedCoupon);
+            }
+
             $totalParaPaypal = number_format($totalFinal, 2, '.', '');
             if ($data['payment']['method'] === 'paypal') {
                 $paypalService = new PayPalService();
@@ -337,16 +361,17 @@ class OrderHandler
             'customer_name'     => $order->delivery_name,
             'purchase_date'     => $order->created_at->format('d/m/Y'),
             'delivery_email'    => $order->delivery_email,
-            'subtotal_products' => $order->subtotal, // Neto de productos
+            'subtotal_products' => $order->subtotal,
+            'discount_amount'   => $order->discount_amount ? number_format((float) $order->discount_amount, 2, '.', '') : null,
             'shipping' => [
                 'method_name'   => $order->distributionCenterMethod->shippingMethod->name ?? 'Envío Estándar',
-                'price'         => $order->shipping_price // Neto de envío
+                'price'         => $order->shipping_price,
             ],
             'iva_percentage'    => $ivaPorcentaje,
             'iva_amount'        => number_format($ivaAmount, 2, '.', ''),
             'total_without_iva' => number_format($totalSinIva, 2, '.', ''),
             'total_with_iva'    => number_format($totalFinal, 2, '.', ''),
-            'items'             => $items
+            'items'             => $items,
         ];
     }
 

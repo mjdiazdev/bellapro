@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { ReactComponent as Logo } from "../../assets/logo.svg";
 import {
   LayoutDashboard, Layers, ShoppingBag, Users, Briefcase,
-  Truck, Package, ClipboardList, FileText, Menu
+  Truck, Package, ClipboardList, FileText, Tag, Menu
 } from 'lucide-react';
 import { NavLink } from 'react-router-dom';
 
@@ -17,6 +17,7 @@ const navigation = [
   { name: 'Pedidos', icon: ClipboardList, path: '/admin/orders', roles: ['admin', 'coordinador'] },
   { name: 'Usuarios', icon: Users, path: '/admin/users', roles: ['admin'] },
   { name: 'Catálogos', icon: FileText, path: '/admin/catalogs', roles: ['admin'] },
+  { name: 'Cupones', icon: Tag, path: '/admin/coupons', roles: ['admin'] },
 ];
 
 const bottomNavigation = [

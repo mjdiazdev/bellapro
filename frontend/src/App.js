@@ -19,6 +19,7 @@ import RedsysSuccessPage from './pages/Client/Checkout/RedsysSuccessPage';
 import RedsysErrorPage from './pages/Client/Checkout/RedsysErrorPage';
 import InfoPage from './pages/Client/Info/InfoPage';
 import CatalogsPage from './pages/Admin/Catalogs/CatalogsPage';
+import CouponsPage from './pages/Admin/Coupons/CouponsPage';
 import NotFoundPage from './pages/NotFoundPage';
 import Dashboard from './pages/Admin/Dashboard/DashboardPage';
 /**
@@ -104,6 +105,11 @@ export default function App() {
           <Route path="/admin/catalogs" element={
             <RequireAuth allowedRoles={['admin']}>
               <CatalogsPage/>
+            </RequireAuth>
+          } />
+          <Route path="/admin/coupons" element={
+            <RequireAuth allowedRoles={['admin']}>
+              <CouponsPage/>
             </RequireAuth>
           } />
 

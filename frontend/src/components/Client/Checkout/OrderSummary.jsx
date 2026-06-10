@@ -1,20 +1,18 @@
 import React from "react";
 import { useCart } from "../../../context/CartContext";
 
-export default function OrderSummary({ selectedShippingMethod }) {
+export default function OrderSummary({ selectedShippingMethod, discount = 0 }) {
   const { cartProducts } = useCart();
 
   const productsInCart = cartProducts.filter(p => p.quantity > 0);
   const subtotalProducts = productsInCart.reduce((sum, p) => sum + p.price * p.quantity, 0);
-  
-  // Obtenemos el precio del envío
-  const shippingPrice = selectedShippingMethod ? Number(selectedShippingMethod.price) : 0;
-  
-  // Lógica de cálculos
-  const baseImponible = subtotalProducts + shippingPrice;
-  const IVA_RATE = 0.21;
-  const iva = baseImponible * IVA_RATE;
-  const total = baseImponible + iva;
+
+  const shippingPrice    = selectedShippingMethod ? Number(selectedShippingMethod.price) : 0;
+  const discountAmount   = Number(discount) || 0;
+  const baseImponible    = subtotalProducts + shippingPrice - discountAmount;
+  const IVA_RATE         = 0.21;
+  const iva              = baseImponible * IVA_RATE;
+  const total            = baseImponible + iva;
 
   return (
     <section>
@@ -52,7 +50,14 @@ export default function OrderSummary({ selectedShippingMethod }) {
               <span>{shippingPrice > 0 ? `${shippingPrice.toFixed(2)}€` : '0.00€'}</span>
             </div>
 
-            {/* BASE IMPONIBLE: Suma de productos + envío */}
+            {discountAmount > 0 && (
+              <div className="flex justify-between text-pink-600 font-medium">
+                <span>Descuento</span>
+                <span>-€{discountAmount.toFixed(2)}</span>
+              </div>
+            )}
+
+            {/* BASE IMPONIBLE: Suma de productos + envío - descuento */}
             <div className="flex justify-between font-semibold text-gray-700 pt-2 border-t border-dashed border-gray-200">
               <span>Base Imponible</span>
               <span>{baseImponible.toFixed(2)}€</span>
