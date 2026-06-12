@@ -57,17 +57,12 @@ export default function OrderDetailsModal({ orderId, onClose }) {
      CÁLCULOS DE PRECIOS
      ============================ */
 
-  const subtotal = Number(order.subtotal);
-  const shipping = Number(order.shipping_price);
-
-  // Base imponible: subtotal + envío
-  const baseImponible = subtotal + shipping;
-
-  // IVA 21%
-  const iva = baseImponible * 0.21;
-
-  // Total final con IVA
-  const totalConIva = baseImponible + iva;
+  const subtotal      = Number(order.subtotal);
+  const shipping      = Number(order.shipping_price);
+  const discount      = Number(order.discount_amount) || 0;
+  const baseImponible = subtotal + shipping - discount;
+  const iva           = baseImponible * 0.21;
+  const totalConIva   = baseImponible + iva;
 
   return (
     <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4"> {/* Añadido p-4 para que el modal no toque los bordes del navegador */}
@@ -173,6 +168,10 @@ export default function OrderDetailsModal({ orderId, onClose }) {
           <div className="mt-6 flex flex-col items-end space-y-1">
             <p>Subtotal: {subtotal.toFixed(2)}€</p>
             <p>Envío: {shipping.toFixed(2)}€</p>
+            {discount > 0 && (
+              <p className="text-pink-600 font-medium">Descuento cupón: -{discount.toFixed(2)}€</p>
+            )}
+            <p>Base imponible: {baseImponible.toFixed(2)}€</p>
             <p>IVA (21%): {iva.toFixed(2)}€</p>
             <p className="font-bold text-lg">Total: {totalConIva.toFixed(2)}€</p>
           </div>

@@ -226,26 +226,35 @@ export default function CheckoutPage() {
 
       <div className="max-w-6xl mx-auto px-6 py-10 pt-[80px] grid grid-cols-1 lg:grid-cols-2 gap-12">
         <div className="order-2 lg:order-2">
-          <div className="lg:sticky lg:top-24">
+          <div className="lg:sticky lg:top-24 space-y-4">
             <OrderSummary
               selectedShippingMethod={currentShippingMethod}
               discount={appliedCoupon?.discount_amount ?? 0}
             />
-            
-            {/* BOTÓN CON CONTROL DE ESTADO DE CARGA */}
-            <Button 
-              onClick={handlePlaceOrder} 
-              fullWidth 
-              className={`mt-4 ${isProcessing ? 'opacity-50 cursor-not-allowed' : ''}`}
-              disabled={isProcessing} // Desactiva el botón nativamente
+
+            <div className="bg-white p-4 rounded-xl shadow-sm border border-gray-200">
+              <h3 className="text-sm font-medium text-gray-700 mb-3">¿Tienes un cupón de descuento?</h3>
+              <CouponInput
+                items={productsInCart.map(p => ({ product_id: p.id, quantity: p.quantity }))}
+                subtotal={productsInCart.reduce((sum, p) => sum + p.price * p.quantity, 0)}
+                appliedCoupon={appliedCoupon}
+                onCouponApplied={setAppliedCoupon}
+                onCouponRemoved={() => setAppliedCoupon(null)}
+              />
+            </div>
+
+            <Button
+              onClick={handlePlaceOrder}
+              fullWidth
+              className={`${isProcessing ? 'opacity-50 cursor-not-allowed' : ''}`}
+              disabled={isProcessing}
             >
-              {isProcessing ? "Procesando..." : `Completar Pago (€${selectedPayment.amount})`}
+              {isProcessing ? "Procesando..." : `Completar Pago (${selectedPayment.amount}€)`}
             </Button>
           </div>
         </div>
 
         <div className="space-y-10 order-1 lg:order-1">
-          {/* ... (Formularios se mantienen igual) ... */}
           <EmailCheckout onCustomerLoaded={setCustomer} />
           <BillingForm
             billingForm={billingForm}
@@ -260,27 +269,16 @@ export default function CheckoutPage() {
               setShippingForm={setShippingForm}
             />
           )}
-          <ShippingMethod 
-            selectedShipping={selectedShippingId} 
+          <ShippingMethod
+            selectedShipping={selectedShippingId}
             setSelectedShipping={setSelectedShippingId}
             onMethodsLoaded={(methods) => setShippingMethods(methods)}
-            postalCode={activePostalCode} 
+            postalCode={activePostalCode}
           />
           <PaymentMethod
             selectedPayment={selectedPayment}
             setSelectedPayment={setSelectedPayment}
           />
-
-          <div>
-            <h3 className="text-sm font-medium text-gray-700 mb-2">¿Tienes un cupón de descuento?</h3>
-            <CouponInput
-              items={productsInCart.map(p => ({ product_id: p.id, quantity: p.quantity }))}
-              subtotal={productsInCart.reduce((sum, p) => sum + p.price * p.quantity, 0)}
-              appliedCoupon={appliedCoupon}
-              onCouponApplied={setAppliedCoupon}
-              onCouponRemoved={() => setAppliedCoupon(null)}
-            />
-          </div>
         </div>
       </div>
       <Footer />

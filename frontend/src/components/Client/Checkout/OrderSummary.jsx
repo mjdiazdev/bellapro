@@ -26,7 +26,7 @@ export default function OrderSummary({ selectedShippingMethod, discount = 0 }) {
             {productsInCart.map(product => (
               <div key={product.id} className="flex justify-between text-gray-600">
                 <span>{product.quantity}x {product.name}</span>
-                <span className="font-medium">€{(product.price * product.quantity).toFixed(2)}</span>
+                <span className="font-medium">{(product.price * product.quantity).toFixed(2)}€</span>
               </div>
             ))}
           </div>
@@ -37,7 +37,7 @@ export default function OrderSummary({ selectedShippingMethod, discount = 0 }) {
           <div className="space-y-2 pt-2">
             <div className="flex justify-between text-gray-600">
               <span>Subtotal productos</span>
-              <span>€{subtotalProducts.toFixed(2)}</span>
+              <span>{subtotalProducts.toFixed(2)}€</span>
             </div>
 
             <div className="flex justify-between text-gray-600">
@@ -53,7 +53,7 @@ export default function OrderSummary({ selectedShippingMethod, discount = 0 }) {
             {discountAmount > 0 && (
               <div className="flex justify-between text-pink-600 font-medium">
                 <span>Descuento</span>
-                <span>-€{discountAmount.toFixed(2)}</span>
+                <span>-{discountAmount.toFixed(2)}€</span>
               </div>
             )}
 
