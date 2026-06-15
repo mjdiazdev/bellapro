@@ -6,9 +6,9 @@
 set -e
 
 PHP="/opt/cpanel/ea-php83/root/usr/bin/php"
-BACKEND="/home/bellaonl/public_html/backend"
-FRONTEND="/home/bellaonl/public_html/frontend"
-ROOT="/home/bellaonl/public_html"
+ROOT="/home/bellapro/bellapro"
+BACKEND="$ROOT/backend"
+FRONTEND="$ROOT/frontend"
 
 echo "==> [1/6] Git pull..."
 cd "$ROOT"
