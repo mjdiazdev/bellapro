@@ -65,10 +65,15 @@ export default function OrderDetailsModal({ orderId, onClose }) {
   const totalConIva   = baseImponible + iva;
 
   return (
-    <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4"> {/* Añadido p-4 para que el modal no toque los bordes del navegador */}
-
+    <div
+      className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4"
+      onClick={onClose}
+    >
       {/* Contenedor del modal con Scroll y Altura Máxima */}
-      <div className="bg-white rounded-xl w-full max-w-5xl max-h-[95vh] flex flex-col relative overflow-hidden shadow-2xl">
+      <div
+        className="bg-white rounded-xl w-full max-w-5xl max-h-[95vh] flex flex-col relative overflow-hidden shadow-2xl"
+        onClick={(e) => e.stopPropagation()}
+      >
 
         {/* Botón cerrar - Lo mantenemos arriba a la derecha */}
         <button

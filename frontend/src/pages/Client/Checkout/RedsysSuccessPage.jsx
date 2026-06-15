@@ -32,12 +32,12 @@ export default function RedsysSuccessPage() {
             detalles.
           </p>
 
-          <button
-            onClick={() => navigate("/")}
-            className="bg-pink text-white font-medium px-6 py-2.5 rounded-full text-sm hover:opacity-90 transition"
+          <a
+            href="/"
+            className="inline-block bg-pink text-white font-medium px-6 py-2.5 rounded-full text-sm hover:opacity-90 transition"
           >
             Volver a la tienda
-          </button>
+          </a>
         </div>
       </main>
 
