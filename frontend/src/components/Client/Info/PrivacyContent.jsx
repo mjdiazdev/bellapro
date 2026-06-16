@@ -7,7 +7,7 @@ export const PrivacyContent = () => (
       a un fichero para su tratamiento automatizado, con la finalidad de presentar y ofrecer nuestros productos, servicios y promociones, 
       concediéndose por tanto el consentimiento expreso para la recepción de comunicaciones comerciales por vía electrónica en los estrictos
       términos que se recogen en las presentes condiciones legales. Igualmente deseamos informarle que podrá ejercer los derechos de acceso,
-      cancelación, rectificación u oposición a través de la dirección de correo electrónico info@bella-online.es Bellapro Universal, S.A. se
+      cancelación, rectificación u oposición a través de la dirección de correo electrónico info@bellapro.es Bellapro Universal, S.A. se
       compromete a proteger la privacidad del usuario, la información que proporcione solo será utilizada con el propósito de satisfacer su 
       necesidad de compra y para examinar y atender su solicitud a los efectos de tramitación y cumplimiento de su pedido, Bellapro Universal,
       S.A. necesita saber su nombre, DNI o código fiscal, dirección de correo electrónico, dirección de facturación, dirección de envío (si es 

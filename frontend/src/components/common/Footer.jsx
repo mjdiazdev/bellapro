@@ -65,10 +65,10 @@ const App = () => {
               <div className="mb-10 text-right">
                 <p className="text-sm text-gray-600">Atención al cliente</p>
                 <a
-                  href="mailto:info@bella-online.es"
+                  href="mailto:info@bellapro.es"
                   className="text-lg font-semibold text-gray-800 hover:text-pink"
                 >
-                  info@bella-online.es
+                  info@bellapro.es
                 </a>
               </div>
 

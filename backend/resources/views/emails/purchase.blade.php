@@ -142,21 +142,21 @@
                         <br><br>
 
                         <strong>Servicio técnico:</strong><br>
-                        info@bella-online.es
+                        info@bellapro.es
                         <br><br>
 
                         <strong>Términos de servicio y Acuerdo de usuario:</strong><br>
-                        https://www.bellapro.com/
+                        https://www.bellapro.es/
                         <br><br>
 
                         <strong>Política de privacidad:</strong><br>
-                        https://www.bellapro.com/
+                        https://www.bellapro.es/
                         <br><br>
 
                         Este correo electrónico se ha enviado en nombre de BellaPro, una empresa registrada
                         en la Unión Europea con número de registro 06020283 y dirección de registro Madrid, Madrid.
                         Este correo electrónico se ha enviado desde una dirección que se utiliza solo para envíos.
-                        No respondas este mensaje. Si tienes alguna pregunta, visita la página https://www.bellapro.com
+                        No respondas este mensaje. Si tienes alguna pregunta, visita la página https://www.bellapro.es
                         <br><br>
 
                         © 2025 BellaPro

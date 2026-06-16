@@ -48,7 +48,7 @@ export default function MenuOverlay({ open, onClose }) {
             <div className="bp-menu-info-col">
               <div className="bp-info-block" style={{ "--i": 5 }}>
                 <h6>Atención al cliente</h6>
-                <a href="mailto:info@bella-online.es" className="font-bold">info@bella-online.es</a>
+                <a href="mailto:info@bellapro.es" className="font-bold">info@bellapro.es</a>
               </div>
 
               <div className="bp-info-block" style={{ "--i": 6 }}>
