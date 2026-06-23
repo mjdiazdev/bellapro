@@ -24,7 +24,7 @@ class RedsysHandler
      */
     public function initiatePayment(Order $order): array
     {
-        $frontendUrl = env('FRONTEND_URL', 'http://localhost:3000');
+        $frontendUrl = config('app.frontend_url');
         $orderNumber = sprintf('%012d', $order->id); // 12 dígitos con zeros
 
         return $this->redsys->initiatePayment([

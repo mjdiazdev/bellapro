@@ -44,5 +44,13 @@ return [
         'cancel_url' => env('PAYPAL_CANCEL_URL'),
     ],
 
+    'redsys' => [
+        'secret_key'       => env('REDSYS_CLAVE_SECRETA'),
+        'fuc'              => env('REDSYS_FUC'),
+        'terminal'         => env('REDSYS_TERMINAL', '3'),
+        'moneda'           => env('REDSYS_MONEDA', '978'),
+        'url'              => env('REDSYS_URL'),
+        'notification_url' => env('REDSYS_NOTIFICATION_URL'),
+    ],
 
 ];

@@ -245,7 +245,7 @@ class OrderHandler
             if ($data['payment']['method'] === 'redsys') {
                 $redsysService = new RedsysService();
 
-                $frontendUrl  = env('FRONTEND_URL', 'http://localhost:3000');
+                $frontendUrl  = config('app.frontend_url');
                 $orderNumber  = sprintf('%012d', $order->id);
                 $amountCents  = (int) round($totalFinal * 100);
 

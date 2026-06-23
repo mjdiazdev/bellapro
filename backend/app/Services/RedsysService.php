@@ -31,11 +31,11 @@ class RedsysService
      */
     public function initiatePayment(array $data): array
     {
-        $secret   = env('REDSYS_CLAVE_SECRETA');
-        $fuc      = env('REDSYS_FUC');
-        $terminal = env('REDSYS_TERMINAL', '3');
-        $moneda   = env('REDSYS_MONEDA', '978');
-        $url      = env('REDSYS_URL');
+        $secret   = config('services.redsys.secret_key');
+        $fuc      = config('services.redsys.fuc');
+        $terminal = config('services.redsys.terminal');
+        $moneda   = config('services.redsys.moneda');
+        $url      = config('services.redsys.url');
 
         $params = [
             'Ds_Merchant_Amount'          => (string) $data['amount_cents'],
@@ -44,7 +44,7 @@ class RedsysService
             'Ds_Merchant_Currency'        => $moneda,
             'Ds_Merchant_TransactionType' => '0',
             'Ds_Merchant_Terminal'        => (string) $terminal,
-            'Ds_Merchant_MerchantURL'     => env('REDSYS_NOTIFICATION_URL', env('APP_URL') . '/api/redsys/notification'),
+            'Ds_Merchant_MerchantURL'     => config('services.redsys.notification_url', config('app.url') . '/api/redsys/notification'),
             'Ds_Merchant_UrlOK'           => $data['url_ok'],
             'Ds_Merchant_UrlKO'           => $data['url_ko'],
         ];
@@ -67,7 +67,7 @@ class RedsysService
      */
     public function verifyNotification(string $merchantParameters, string $receivedSignature): ?array
     {
-        $secret = env('REDSYS_CLAVE_SECRETA');
+        $secret = config('services.redsys.secret_key');
 
         $normalizedSignature = str_replace(['-', '_'], ['+', '/'], $receivedSignature);
 
