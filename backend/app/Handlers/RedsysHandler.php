@@ -88,7 +88,7 @@ class RedsysHandler
             Log::info("Redsys PAGO OK — Order: {$orderId}, Código: {$responseCode}");
 
             try {
-                $mailData = $this->orders->prepareOrderMailDataPublic($order);
+                $mailData = $this->orders->prepareOrderMailData($order);
                 $this->mail->sendPurchaseMail($order->delivery_email, $mailData);
             } catch (\Throwable $mailError) {
                 Log::error("Redsys: error enviando email orden {$orderId}: " . $mailError->getMessage());
