@@ -55,15 +55,20 @@ export default function OrdersList({ orders, onBulkStatusChange }) {
       render: (o) => {
         // Mapeo de estilos, textos e iconos
         const statusConfig = {
+          payment_pending: {
+            text: "Pendiente de pago",
+            classes: "bg-orange-100 text-orange-700 border-orange-200",
+            icon: <Clock size={14} className="mr-1" />
+          },
+          pending: {
+            text: "Pendiente",
+            classes: "bg-blue-100 text-blue-700 border-blue-200",
+            icon: <Clock size={14} className="mr-1" />
+          },
           completed: {
             text: "Completado",
             classes: "bg-green-100 text-green-700 border-green-200",
             icon: <CheckCircle size={14} className="mr-1" />
-          },
-          pending: {
-            text: "Pendiente",
-            classes: "bg-amber-100 text-amber-700 border-amber-200",
-            icon: <Clock size={14} className="mr-1" />
           },
           canceled: {
             text: "Anulado",
@@ -118,6 +123,7 @@ export default function OrdersList({ orders, onBulkStatusChange }) {
               defaultValue=""
             >
               <option value="" disabled className="text-gray-800 bg-white">Cambiar estado a...</option>
+              <option value="payment_pending" className="text-gray-800 bg-white">Pendiente de pago</option>
               <option value="pending" className="text-gray-800 bg-white">Pendiente</option>
               <option value="completed" className="text-gray-800 bg-white">Completado</option>
               <option value="canceled" className="text-gray-800 bg-white">Anulado</option>

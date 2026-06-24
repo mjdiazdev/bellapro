@@ -76,7 +76,7 @@ class RedsysHandler
         $payment = Payment::where('order_id', $orderId)->first();
 
         if ((string) $responseCode >= '0000' && (string) $responseCode <= '0099') {
-            $order->update(['status' => 'completed']);
+            $order->update(['status' => 'pending']);
 
             if ($payment) {
                 $payment->update([

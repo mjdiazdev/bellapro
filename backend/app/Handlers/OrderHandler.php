@@ -181,7 +181,7 @@ class OrderHandler
                 'subtotal'                       => $subtotal,
                 'shipping_price'                 => $shippingPrice,
                 'total'                          => $totalFinal,
-                'status'                         => 'pending',
+                'status'                         => 'payment_pending',
                 'coupon_id'                      => $appliedCoupon?->id,
                 'discount_amount'                => $discountAmount > 0 ? $discountAmount : null,
             ]);
@@ -292,7 +292,7 @@ class OrderHandler
 
         // 1. Actualizar estados
         $this->payments->updateStatus($orderId, 'completed', $capture);
-        $order->update(['status' => 'completed']);
+        $order->update(['status' => 'pending']);
 
         // 2. Enviar correo
         try {
@@ -380,7 +380,7 @@ class OrderHandler
         $validator = Validator::make($data, [
             'ids'    => 'required|array',
             'ids.*'  => 'exists:orders,id',
-            'status' => 'required|in:pending,completed,canceled' // <--- Validación estricta
+            'status' => 'required|in:payment_pending,pending,completed,canceled'
         ]);
 
         if ($validator->fails()) {
