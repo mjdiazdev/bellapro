@@ -38,9 +38,9 @@ function RequireAuth({ children, allowedRoles = [] }) {
     return <Navigate to="/login" replace />;
   }
 
-  // 2. Si hay roles definidos y el usuario no tiene uno permitido, rebotar a Pedidos
+  // 2. Si hay roles definidos y el usuario no tiene uno permitido, al login
   if (allowedRoles.length > 0 && !allowedRoles.includes(userRole)) {
-    return <Navigate to="/admin/orders" replace />;
+    return <Navigate to="/login" replace />;
   }
 
   return children;
