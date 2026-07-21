@@ -18,6 +18,9 @@ export default function StorePage() {
   const [loading, setLoading] = useState(false);
   const [searchTerm, setSearchTerm] = useState("");
   const [activeCatalog, setActiveCatalog] = useState(null);
+  const [isMobile] = useState(() =>
+    /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent)
+  );
 
   useEffect(() => {
     api.get("/catalogs").then((res) => {
@@ -167,8 +170,11 @@ export default function StorePage() {
 
                   {!category && catalogProducts.length === 0 && (
                     <div className="text-center py-16 text-gray-500">
-                      <p className="font-medium">Indica la página de tu catálogo para ver sus productos</p>
-                      <p className="text-sm text-gray-400 mt-1">Usa el botón de arriba para escanear o indicar la página.</p>
+                      <p className="font-medium">
+                        {isMobile
+                          ? "Usa el botón de arriba para escanear la página"
+                          : "Indica la página de tu catálogo para ver sus productos"}
+                      </p>
                     </div>
                   )}
 
