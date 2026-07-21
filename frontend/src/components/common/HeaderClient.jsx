@@ -10,7 +10,10 @@ import { useCart } from "../../context/CartContext";
 export default function Header() {
   const [openQR, setOpenQR] = useState(false);
   const [openCart, setOpenCart] = useState(false);
-  const [openMenu, setOpenMenu] = useState(false); 
+  const [openMenu, setOpenMenu] = useState(false);
+  const [isMobile] = useState(() =>
+    /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent)
+  );
 
   const { cartProducts, addToCart, removeFromCart } = useCart();
   const totalItems = cartProducts.reduce((sum, p) => sum + p.quantity, 0);
@@ -30,15 +33,14 @@ export default function Header() {
 
           <div className="flex items-center space-x-2 md:space-x-4">
             
-            {/* Botón QR con texto "Escanear página" siempre visible */}
+            {/* En móvil invita a escanear; en escritorio (sin cámara) invita a indicar la página */}
             <button
               onClick={() => setOpenQR(true)}
               className="flex items-center border border-pink space-x-1 md:space-x-2 bg-pink-50 text-pink px-3 py-1.5 md:px-4 md:py-2 rounded-full hover:bg-pink-100 transition-colors"
             >
               <QrCode className="h-4 w-4" />
-              {/* Texto visible en móvil con letra más pequeña (text-[10px]) */}
               <span className="text-[10px] md:text-sm tracking-tight">
-                Escanear página
+                {isMobile ? "Escanear página" : "Indica la página"}
               </span>
             </button>
 

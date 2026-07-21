@@ -35,7 +35,12 @@ export default function StorePage() {
 
   // Cargar productos desde QR
   useEffect(() => {
-    if (!qrCode) return;
+    if (!qrCode) {
+      // Sin código de página (home): limpiamos el catálogo anterior
+      setCatalogProducts([]);
+      setCategory(null);
+      return;
+    }
 
     const loadProducts = async () => {
       setLoading(true);
@@ -159,6 +164,13 @@ export default function StorePage() {
               ) : (
                 <>
                   {category && <h2 className="text-xl font-bold text-gray-800 mb-4">Página {category.code}</h2>}
+
+                  {!category && catalogProducts.length === 0 && (
+                    <div className="text-center py-16 text-gray-500">
+                      <p className="font-medium">Indica la página de tu catálogo para ver sus productos</p>
+                      <p className="text-sm text-gray-400 mt-1">Usa el botón de arriba para escanear o indicar la página.</p>
+                    </div>
+                  )}
 
                   {catalogProducts.map(product => {
                     // 1. Buscamos si este producto ya está en el carrito para saber su cantidad

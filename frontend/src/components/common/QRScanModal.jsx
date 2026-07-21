@@ -127,7 +127,7 @@ export default function QRScanModal({ open, onClose }) {
         </button>
 
         <h2 className="text-lg font-semibold mb-4">
-          {isMobile ? "Escanear código QR" : "Ingresar código QR"}
+          {isMobile ? "Escanear código QR" : "Indica la página"}
         </h2>
 
         {!isMobile ? (
@@ -136,11 +136,11 @@ export default function QRScanModal({ open, onClose }) {
               type="text"
               value={code}
               onChange={(e) => setCode(e.target.value)}
-              placeholder="Ingrese el código QR"
+              placeholder="Número de página"
               className="w-full border rounded-lg p-3 focus:ring-pink focus:border-pink outline-none"
             />
             <Button fullWidth onClick={() => handleProcess()}>
-              Procesar código
+              Ir a la página
             </Button>
           </div>
         ) : (
