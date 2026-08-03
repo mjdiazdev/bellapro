@@ -57,11 +57,16 @@ class ProductRepository
     }
 
     /**
-     * Listar todos los productos.
+     * Listar todos los productos, con búsqueda opcional por nombre o referencia.
      */
-    public function all(int $perPage = 25)
+    public function all(int $perPage = 25, ?string $search = null)
     {
         // Usamos paginate para que Laravel gestione la metadata (total, current_page, etc.)
-        return Product::with(['category', 'stock'])->paginate($perPage);
+        return Product::with(['category', 'stock'])
+            ->when($search, fn($query) => $query->where(
+                fn($subQuery) => $subQuery->where('name', 'like', "%{$search}%")
+                    ->orWhere('reference', 'like', "%{$search}%")
+            ))
+            ->paginate($perPage);
     }
 }

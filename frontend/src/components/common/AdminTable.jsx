@@ -1,4 +1,4 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useEffect } from 'react';
 import { Edit, Trash2, Eye, Search } from 'lucide-react';
 import Button from './variant/Button';
 
@@ -9,17 +9,29 @@ export default function AdminTable({
   onDelete,
   onView,
   isEditable = false,
-  onSaveAll
+  onSaveAll,
+  onSearchChange // opcional: si se pasa, la busqueda se delega al backend (server-side) en vez de filtrar en memoria
 }) {
   const [searchTerm, setSearchTerm] = useState("");
+  const isServerSearch = typeof onSearchChange === 'function';
+
+  // Debounce: solo aplica cuando la busqueda es server-side, para no disparar un request por cada tecla
+  useEffect(() => {
+    if (!isServerSearch) return;
+    const timeoutId = setTimeout(() => onSearchChange(searchTerm), 400);
+    return () => clearTimeout(timeoutId);
+  }, [searchTerm, isServerSearch, onSearchChange]);
 
   const filteredData = useMemo(() => {
+    // Si la busqueda es server-side, "data" ya viene filtrada desde el backend
+    if (isServerSearch) return data;
+
     return data.filter((item) =>
       Object.values(item).some((val) =>
         String(val).toLowerCase().includes(searchTerm.toLowerCase())
       )
     );
-  }, [data, searchTerm]);
+  }, [data, searchTerm, isServerSearch]);
 
   return (
     <div className="space-y-4">

@@ -141,11 +141,12 @@ class ProductController extends Controller
      */
     public function list(Request $request, ProductHandler $handler)
     {
-        // Capturamos 'per_page' de la URL (ej: /api/products?per_page=50)
+        // Capturamos 'per_page' y 'search' de la URL (ej: /api/products?per_page=50&search=igora)
         $perPage = $request->query('per_page', 25);
+        $search = $request->query('search');
 
         // El handler ahora devuelve un objeto LengthAwarePaginator
-        $paginatedData = $handler->list((int) $perPage);
+        $paginatedData = $handler->list((int) $perPage, $search);
 
         return response()->json($paginatedData);
     }

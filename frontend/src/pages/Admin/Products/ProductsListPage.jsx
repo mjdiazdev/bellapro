@@ -23,6 +23,7 @@ export default function ProductsListPage() {
 
   const [perPage, setPerPage] = useState(25);
   const [currentPage, setCurrentPage] = useState(1);
+  const [search, setSearch] = useState("");
 
   // 1. Hook CRUD: Obtenemos las funciones básicas
   const { 
@@ -41,9 +42,15 @@ export default function ProductsListPage() {
   // 3. Sincronizar estado local cuando los productos carguen desde el Backend
   // EFECTO 1: Cargar datos del servidor cuando cambian los filtros/paginación
   useEffect(() => {
-    // Solo disparamos la carga si cambian los valores de paginación
-    loadData({ per_page: perPage, page: currentPage });
-  }, [perPage, currentPage]);
+    // Solo disparamos la carga si cambian los valores de paginación o la búsqueda
+    loadData({ per_page: perPage, page: currentPage, search: search || undefined });
+  }, [perPage, currentPage, search]);
+
+  // Cada vez que cambia el término de búsqueda, volvemos a la página 1
+  const handleSearchChange = (value) => {
+    setSearch(value);
+    setCurrentPage(1);
+  };
 
   // EFECTO 2: Sincronizar productos del servidor al estado local
   useEffect(() => {
@@ -363,6 +370,7 @@ export default function ProductsListPage() {
                     selectedIds={selectedIds}
                     onToggleSelect={handleToggleSelect}
                     onToggleSelectAll={handleToggleSelectAll}
+                    onSearchChange={handleSearchChange}
                   />
                   <PaginationControls 
                       currentPage={currentPage}

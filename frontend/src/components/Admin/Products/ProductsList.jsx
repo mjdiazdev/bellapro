@@ -2,7 +2,7 @@ import { useState } from "react";
 import AdminTable from "../../common/AdminTable";
 import ProductDetailsModal from "./ProductDetailsModal";
 
-export default function ProductsList({ products, onEdit, onDelete, onLocalChange, onSaveAll, selectedIds = new Set(), onToggleSelect, onToggleSelectAll }) {
+export default function ProductsList({ products, onEdit, onDelete, onLocalChange, onSaveAll, selectedIds = new Set(), onToggleSelect, onToggleSelectAll, onSearchChange }) {
   const [selectedProduct, setSelectedProduct] = useState(null);
 
   const allSelected = products.length > 0 && selectedIds.size === products.length;
@@ -111,6 +111,7 @@ export default function ProductsList({ products, onEdit, onDelete, onLocalChange
         onView={(p) => setSelectedProduct(p.id)}
         isEditable={true}
         onSaveAll={onSaveAll}
+        onSearchChange={onSearchChange}
       />
 
       {selectedProduct && (
