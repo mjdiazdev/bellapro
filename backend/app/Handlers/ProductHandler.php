@@ -121,11 +121,14 @@ class ProductHandler
                 $extension = $data['image']->getClientOriginalExtension();
                 $fileName = $newReference . '.' . $extension;
                 $data['image']->storeAs('products', $fileName, 'public');
-            }
 
-            // --- CASO 3: Actualizar datos en BD ---
-            // Eliminamos 'image' del array data para que no intente guardarlo en la BD
-            unset($data['image']);
+                // Guardamos el nombre final para que se persista en la BD
+                $data['image'] = $fileName;
+            } else {
+                // --- CASO 3: Actualizar datos en BD ---
+                // Eliminamos 'image' del array data para que no intente guardarlo con un valor invalido
+                unset($data['image']);
+            }
             $product = $this->products->update($id, $data);
 
             // --- CASO 4: Actualizar Stock ---
