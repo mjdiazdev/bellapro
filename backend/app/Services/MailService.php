@@ -30,9 +30,16 @@ class MailService
             'total_with_iva'  => $orderData['total_with_iva'],
         ];
 
-        Mail::send('emails.purchase', ['data' => $payload], function ($message) use ($email) {
+        $adminOrdersEmail = config('mail.admin_orders_email');
+
+        Mail::send('emails.purchase', ['data' => $payload], function ($message) use ($email, $adminOrdersEmail) {
             $message->to($email)
                     ->subject('Confirmación de compra - BellaPro');
+
+            // Copia interna para el equipo comercial, si esta configurada en el .env
+            if (!empty($adminOrdersEmail)) {
+                $message->cc($adminOrdersEmail);
+            }
         });
     }
 }

@@ -115,4 +115,17 @@ return [
         'name' => env('MAIL_FROM_NAME', 'Example'),
     ],
 
+    /*
+    |--------------------------------------------------------------------------
+    | Email de aviso interno de pedidos
+    |--------------------------------------------------------------------------
+    |
+    | Dirección que recibe copia del mail de confirmación de compra cada vez
+    | que se confirma un pedido (PayPal o Redsys). Se define en el .env del
+    | servidor y no se versiona en el repositorio.
+    |
+    */
+
+    'admin_orders_email' => env('MAIL_ADMIN_ORDERS'),
+
 ];
