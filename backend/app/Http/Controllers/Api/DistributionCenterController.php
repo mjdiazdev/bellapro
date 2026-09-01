@@ -89,9 +89,12 @@ class DistributionCenterController extends Controller
      */
     public function getShippingMethods(Request $request, DistributionCenterHandler $handler)
     {
+        $request->validate([
+            'postal_code' => ['required', 'string'],
+        ]);
+
         try {
-            $postalCode = $request->query('postal_code');
-            $methods = $handler->getMethodsByPostalCode($postalCode);
+            $methods = $handler->getMethodsByPostalCode($request->query('postal_code'));
 
             return response()->json([
                 'status' => 'success',
