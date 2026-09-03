@@ -89,9 +89,20 @@ class DistributionCenterController extends Controller
      */
     public function getShippingMethods(Request $request, DistributionCenterHandler $handler)
     {
-        $request->validate([
+        // Validador manual (en vez de $request->validate()) para garantizar
+        // siempre una respuesta JSON: esta ruta es solo API y no debe depender
+        // del header Accept del cliente para decidir si responde JSON o hace
+        // un redirect de formulario web.
+        $validator = \Illuminate\Support\Facades\Validator::make($request->all(), [
             'postal_code' => ['required', 'string'],
         ]);
+
+        if ($validator->fails()) {
+            return response()->json([
+                'message' => $validator->errors()->first(),
+                'errors'  => $validator->errors(),
+            ], 422);
+        }
 
         try {
             $methods = $handler->getMethodsByPostalCode($request->query('postal_code'));
